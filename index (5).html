@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OSP Central — Salma's Daily Check-In</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Lora:ital,wght@0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%;overflow:hidden}
+body{font-family:'DM Sans','Segoe UI',sans-serif;background:#f5f0eb;color:#2d2a26}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#d4c9bb;border-radius:4px}
+input,textarea,select,button{font-family:inherit}
+button{cursor:pointer}a{text-decoration:none;cursor:pointer}
+.fade-in{animation:fadeIn 0.15s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.spin{animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+</style>
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useMemo,useRef,useCallback} = React;
+
+// ── Tokens ────────────────────────────────────────────────────────────────────
+const C={bg:"#f5f0eb",sidebar:"#eee8e0",card:"#ffffff",border:"#e0d8ce",border2:"#cec5b8",
+  text:"#2d2a26",text2:"#6b6358",text3:"#a89f92",accent:"#5b5bd6",cream:"#faf7f4"};
+
+// ── Static data ───────────────────────────────────────────────────────────────
+const TEAM=["Salma","JE","ZM","Alena","Sajjad","Cleo","Jen","Zach","Rachel","Eric","Japeck","Rebecca","Lauren","Kirby","Stacey","OPE Leads"];
+const WORKSTREAMS=["OPE Digest","OPE Leads In-Person Event","OPE Leads Weekly Meeting","Onboarding — Allie","Assessment History / Report","OSP Operations","OSP Team Meeting Prep","UX & Design — Insight","Insight Projects","RESC Monthly Meeting","Race & Equity Session (March)","Supervisor 1:1","PM Engagement Check-In","Hiring / Resume Review","Performance Reviews","Other"];
+const SECTIONS=[
+  {id:"all",label:"All",icon:"◈",color:"#5b5bd6"},
+  {id:"supervisor",label:"Supervisor Check-In",icon:"◈",color:"#3b82f6",tag:"Supervisor"},
+  {id:"osp",label:"OSP Operations",icon:"◆",color:"#10b981",tag:"OSP Ops"},
+  {id:"insight",label:"PM · Insight",icon:"◉",color:"#8b5cf6",tag:"Insight"},
+  {id:"events",label:"Events & Engagement",icon:"◇",color:"#f59e0b",tag:"Events"},
+  {id:"meetings",label:"Meetings",icon:"◷",color:"#ef4444",tag:"Meeting"},
+];
+const PRIORITIES=[{id:"urgent",label:"Urgent",color:"#ef4444"},{id:"high",label:"High",color:"#f97316"},{id:"normal",label:"Normal",color:"#5b5bd6"},{id:"low",label:"Low",color:"#94a3b8"}];
+const STATUSES=[{id:"pending",label:"Pending",dot:"#f97316"},{id:"inprogress",label:"In Progress",dot:"#3b82f6"},{id:"blocked",label:"Blocked",dot:"#ef4444"},{id:"done",label:"Done",dot:"#10b981"}];
+const VIEWS=[
+  {id:"prep",label:"Meeting Prep",icon:"🎯"},
+  {id:"notes",label:"Notes",icon:"📝"},
+  {id:"cards",label:"Cards",icon:"▦"},
+  {id:"search",label:"Search",icon:"🔍"},
+  {id:"history",label:"History",icon:"🗂"},
+  {id:"archive",label:"Archive",icon:"📦"},
+  {id:"todo",label:"To-Do",icon:"✅"},
+  {id:"dates",label:"Key Dates",icon:"📌"},
+  {id:"gantt",label:"Gantt",icon:"📊"},
+  {id:"calendar",label:"Calendar",icon:"📅"},
+  {id:"dashboard",label:"Dashboard",icon:"📈"},
+  {id:"monitor",label:"Monitor",icon:"🔗"},
+];
+
+const WEEKLY_TEMPLATES={
+  supervisor:{label:"Supervisor 1:1 (Weekly)",section:"supervisor",title:"Supervisor 1:1",attendees:"",agenda:"1. Weekly priorities review\n2. Staffing updates (Allie onboarding, open roles)\n3. Performance review status\n4. OSP team blockers / escalations\n5. Budget / resource needs",decisions:"",actions:"",nextsteps:"",blockers:"",notes:""},
+  insight:{label:"PM Engagement Check-In",section:"insight",title:"PM Engagement Check-In",attendees:"JE, ZM, Rachel",agenda:"1. Sprint status & Jira board review (TDPGM / SQRT / SQR)\n2. Assessment History / Report progress\n3. UX & Design updates\n4. Open questions / blockers",decisions:"",actions:"",nextsteps:"",blockers:"",notes:""},
+  osp:{label:"OSP Team Meeting (Every other Friday)",section:"osp",title:"OSP Team Meeting",attendees:"Alena, Sajjad, Cleo, Jen, Zach, Rebecca, Lauren, Kirby, Stacey",agenda:"1. Team updates & announcements\n2. Onboarding — Allie status\n3. Pending work / helpdesk queue\n4. Operations updates\n5. Wins & shoutouts",decisions:"",actions:"",nextsteps:"",blockers:"",notes:""},
+  events:{label:"OPE Leads (Every Monday)",section:"events",title:"OPE Leads Weekly Meeting",attendees:"OPE Leads, Japeck, Salma",agenda:"1. Priorities for the week\n2. OPE Digest — status & content needs\n3. In-person event planning updates\n4. RESC / Race & Equity session updates\n5. Comms & engagement calendar",decisions:"",actions:"",nextsteps:"",blockers:"",notes:""},
+  meetings:{label:"Insight Full Team (Every 2 weeks)",section:"meetings",title:"Insight Full Team Meeting",attendees:"Japeck, Rachel, Alena, Rebecca, Salma, Eric",agenda:"1. Product updates & demos\n2. Jira board walkthrough\n3. QC / release readiness\n4. Upcoming milestones\n5. Open questions",decisions:"",actions:"",nextsteps:"",blockers:"",notes:""},
+};
+const ALL_TEMPLATES=Object.values(WEEKLY_TEMPLATES);
+
+const TEMPLATE_FIELDS=[
+  {key:"agenda",label:"Agenda / Topics",icon:"📋",ph:"What was covered..."},
+  {key:"decisions",label:"Key Decisions",icon:"✅",ph:"Decisions reached..."},
+  {key:"actions",label:"Action Items (who + due)",icon:"⚡",ph:"e.g. Salma — follow up with Sajjad by 3/2"},
+  {key:"nextsteps",label:"Next Steps",icon:"→",ph:"What happens next..."},
+  {key:"blockers",label:"Blockers / Dependencies",icon:"⚠",ph:"What's in the way..."},
+  {key:"notes",label:"My Notes / Thoughts",icon:"💭",ph:"Anything else to capture..."},
+];
+
+// DOE/NYC 2025-26 school calendar holidays
+const DOE_HOLIDAYS_2025_26=[
+  {date:"2025-09-01",label:"Labor Day",type:"holiday"},
+  {date:"2025-09-18",label:"Rosh Hashanah",type:"holiday"},
+  {date:"2025-09-19",label:"Rosh Hashanah (obs.)",type:"holiday"},
+  {date:"2025-09-27",label:"Yom Kippur",type:"holiday"},
+  {date:"2025-10-14",label:"Italian Heritage / Indigenous Peoples Day",type:"holiday"},
+  {date:"2025-11-04",label:"Election Day",type:"holiday"},
+  {date:"2025-11-11",label:"Veterans Day",type:"holiday"},
+  {date:"2025-11-27",label:"Thanksgiving",type:"holiday"},
+  {date:"2025-11-28",label:"Thanksgiving (Day After)",type:"holiday"},
+  {date:"2025-12-24",label:"Christmas Eve",type:"holiday"},
+  {date:"2025-12-25",label:"Christmas Day",type:"holiday"},
+  {date:"2025-12-26",label:"Winter Recess",type:"holiday"},
+  {date:"2025-12-29",label:"Winter Recess",type:"holiday"},
+  {date:"2025-12-30",label:"Winter Recess",type:"holiday"},
+  {date:"2025-12-31",label:"New Year's Eve",type:"holiday"},
+  {date:"2026-01-01",label:"New Year's Day",type:"holiday"},
+  {date:"2026-01-02",label:"Winter Recess",type:"holiday"},
+  {date:"2026-01-19",label:"MLK Jr. Day",type:"holiday"},
+  {date:"2026-02-16",label:"Winter Break",type:"holiday"},
+  {date:"2026-02-17",label:"Winter Break",type:"holiday"},
+  {date:"2026-02-18",label:"Winter Break",type:"holiday"},
+  {date:"2026-02-19",label:"Winter Break",type:"holiday"},
+  {date:"2026-02-20",label:"Presidents Day / Winter Break",type:"holiday"},
+  {date:"2026-04-02",label:"Spring Recess",type:"holiday"},
+  {date:"2026-04-03",label:"Spring Recess",type:"holiday"},
+  {date:"2026-04-06",label:"Spring Recess",type:"holiday"},
+  {date:"2026-04-07",label:"Spring Recess",type:"holiday"},
+  {date:"2026-04-08",label:"Spring Recess",type:"holiday"},
+  {date:"2026-04-09",label:"Spring Recess",type:"holiday"},
+  {date:"2026-04-10",label:"Good Friday / Spring Recess",type:"holiday"},
+  {date:"2026-05-25",label:"Memorial Day",type:"holiday"},
+  {date:"2026-06-19",label:"Juneteenth",type:"holiday"},
+];
+
+const DEFAULT_SETTINGS={
+  jiraBoards:[{id:1,name:"TDPGM",base:"https://doeord.atlassian.net/browse",prefix:"TDPGM"},{id:2,name:"SQRT",base:"https://doeord.atlassian.net/browse",prefix:"SQRT"},{id:3,name:"SQR",base:"https://doeord.atlassian.net/browse",prefix:"SQR"}],
+  zendeskBoards:[{id:1,name:"OSP Helpdesk",base:"https://doeord.zendesk.com"}],
+  slackChannels:[{id:1,name:"#osp-team",workspace:"",channel:"osp-team"},{id:2,name:"#ope-leads",workspace:"",channel:"ope-leads"},{id:3,name:"#insight-dev",workspace:"",channel:"insight-dev"}],
+  teamsChannels:[{id:1,name:"OSP General",url:"https://teams.microsoft.com"},{id:2,name:"Insight Team",url:"https://teams.microsoft.com"}],
+  outlookEmail:"",
+};
+
+const SAMPLE_ITEMS=[
+  {id:1,section:"insight",title:"Assessment History — Summary section walkthrough",workstream:"Assessment History / Report",agenda:"Summary section walkthrough with data team",decisions:"Show overall status for HS students",actions:"Salma — Jira ticket TDPGM-9217 by 2/26",nextsteps:"Dev to start Assessment Report layout",blockers:"",notes:"Details section dropdown + State tests TBD",priority:"urgent",status:"pending",owner:"Salma",jira:"TDPGM-9217",startDate:"2026-02-26",due:"2026-03-05",carryOver:true,date:"2026-02-26",type:"checkin",linkedItems:[],archived:false},
+  {id:2,section:"osp",title:"Onboarding — Allie (starts 3/2)",workstream:"Onboarding — Allie",agenda:"Review onboarding checklist",decisions:"Salma owns all access coordination",actions:"Salma — follow up with Sajjad on seating & computer by 2/28",nextsteps:"Create onboarding Outlook invite",blockers:"Waiting on IT for computer",notes:"Formerly Rachel He's computer",priority:"high",status:"pending",owner:"Salma",jira:"",startDate:"2026-02-23",due:"2026-03-02",carryOver:true,date:"2026-02-23",type:"checkin",linkedItems:[],archived:false},
+  {id:3,section:"supervisor",title:"OSP Performance Review",workstream:"Performance Reviews",agenda:"360 review process + timeline",decisions:"Complete by end of Feb",actions:"Salma — follow up with OPS on 360 framework by 2/25",nextsteps:"Complete self-evaluation section",blockers:"Waiting on OPS framework",notes:"",priority:"high",status:"pending",owner:"Salma",jira:"",startDate:"2026-01-26",due:"2026-02-28",carryOver:true,date:"2026-01-26",type:"checkin",linkedItems:[],archived:false},
+  {id:4,section:"meetings",title:"Insight Leads Meeting 2/26",workstream:"Insight Projects",agenda:"Assessment Report walkthrough, NYSESLAT data, Alerts rollup",decisions:"Remove 'new framework' from US History test name",actions:"Rachel — Jira ticket for dev re: Assessment Report\nAlena — confirm Alerts rules TDPGM-9217",nextsteps:"QC begins week of 2.2, release target 2.25",blockers:"Rebecca OoO 2/19",notes:"Multiple years of assessment data needed",priority:"normal",status:"done",owner:"Salma",jira:"TDPGM-9217",startDate:"2026-02-26",due:"2026-02-26",carryOver:false,date:"2026-02-26",type:"meeting",attendees:"Japeck, Rachel, Alena, Rebecca, Salma",linkedItems:[1],archived:false},
+  {id:5,section:"events",title:"OPE Digest — language + photos",workstream:"OPE Digest",agenda:"Draft copy review",decisions:"Use Q1 cohort photos from Feb session",actions:"Salma — draft language by 3/5\nZM — review and approve",nextsteps:"Send to design by 3/8",blockers:"",notes:"",priority:"normal",status:"inprogress",owner:"Salma",jira:"",startDate:"2026-02-19",due:"2026-03-12",carryOver:true,date:"2026-02-19",type:"checkin",linkedItems:[],archived:false},
+  {id:6,section:"events",title:"Race & Equity Session — March OSP",workstream:"Race & Equity Session (March)",agenda:"Session planning and content development",decisions:"",actions:"Salma — confirm date with Kirby by 3/1\nStacey — send facilitator brief",nextsteps:"Finalize agenda and materials",blockers:"Waiting on facilitator confirmation",notes:"",priority:"high",status:"pending",owner:"Salma",jira:"",startDate:"2026-02-24",due:"2026-03-15",carryOver:true,date:"2026-02-24",type:"checkin",linkedItems:[],archived:false},
+];
+const SAMPLE_TODOS=[
+  {id:101,text:"Check OPE Leads agenda for Monday",done:false,date:new Date().toISOString().split("T")[0]},
+  {id:102,text:"Review Zendesk helpdesk queue",done:false,date:new Date().toISOString().split("T")[0]},
+  {id:103,text:"Follow up with Sajjad on Allie's computer",done:false,date:new Date().toISOString().split("T")[0]},
+];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const getPri=id=>PRIORITIES.find(p=>p.id===id)||PRIORITIES[2];
+const getSta=id=>STATUSES.find(s=>s.id===id)||STATUSES[0];
+const getSec=id=>SECTIONS.find(s=>s.id===id)||SECTIONS[1];
+const fmtDate=d=>{if(!d)return"";return new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"});};
+const fmtDateFull=d=>{if(!d)return"";return new Date(d+"T00:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});};
+const isOverdue=due=>due&&new Date(due+"T00:00:00")<new Date(new Date().toDateString());
+const isDueSoon=due=>{if(!due)return false;const d=new Date(due+"T00:00:00"),now=new Date();const diff=(d-now)/(1000*60*60);return diff>=0&&diff<=48;};
+const todayStr=()=>new Date().toISOString().split("T")[0];
+const lastWeekStr=()=>{const d=new Date();d.setDate(d.getDate()-7);return d.toISOString().split("T")[0];};
+function lsGet(k,fb){try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb;}catch{return fb;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+function highlight(text,query){
+  if(!query||!text)return text;
+  const idx=text.toLowerCase().indexOf(query.toLowerCase());
+  if(idx===-1)return text;
+  return<span>{text.slice(0,idx)}<mark style={{background:"#fde68a",borderRadius:2,padding:"0 1px"}}>{text.slice(idx,idx+query.length)}</mark>{text.slice(idx+query.length)}</span>;
+}
+const mkInp=(extra={})=>({width:"100%",background:C.cream,border:`1px solid ${C.border}`,borderRadius:8,padding:"8px 11px",color:C.text,fontSize:13,outline:"none",...extra});
+const LABEL={fontSize:10,color:C.text3,fontWeight:700,letterSpacing:"0.07em",display:"block",marginBottom:4};
+
+function Tag({label,color,onClick}){
+  return<span onClick={onClick} style={{fontSize:10,fontWeight:600,color,background:color+"18",padding:"2px 8px",borderRadius:20,border:`1px solid ${color}30`,whiteSpace:"nowrap",cursor:onClick?"pointer":"default"}}>{label}</span>;
+}
+function LinkChip({href,label,color}){
+  if(!href)return null;
+  return<a href={href} target="_blank" rel="noopener noreferrer" style={{fontSize:10,color,background:color+"15",padding:"2px 8px",borderRadius:20,border:`1px solid ${color}33`,fontWeight:600,display:"inline-flex",alignItems:"center",gap:3,whiteSpace:"nowrap"}}>{label} ↗</a>;
+}
+function TeamDatalist(){return<datalist id="team-list">{TEAM.map(n=><option key={n} value={n}/>)}</datalist>;}
+function WorkstreamDatalist(){return<datalist id="ws-list">{WORKSTREAMS.map(w=><option key={w} value={w}/>)}</datalist>;}
+
+// ── Due Soon Banner ───────────────────────────────────────────────────────────
+function DueSoonBanner({items}){
+  const soon=items.filter(i=>i.status!=="done"&&!i.archived&&isDueSoon(i.due));
+  const overdue=items.filter(i=>i.status!=="done"&&!i.archived&&isOverdue(i.due));
+  if(!soon.length&&!overdue.length)return null;
+  return(
+    <div style={{background:"#fffbeb",borderBottom:`1px solid #fde68a`,padding:"8px 20px",display:"flex",alignItems:"center",gap:16,flexWrap:"wrap",flexShrink:0}}>
+      {overdue.length>0&&<div style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"#b45309",fontWeight:600}}>
+        <span>⏰</span> {overdue.length} overdue:
+        {overdue.slice(0,3).map(i=><span key={i.id} style={{background:"#fef3c7",border:"1px solid #fde68a",borderRadius:6,padding:"1px 7px",fontSize:11,fontWeight:500,color:"#92400e"}}>{i.title.slice(0,30)}{i.title.length>30?"…":""}</span>)}
+        {overdue.length>3&&<span style={{fontSize:11,color:"#92400e"}}>+{overdue.length-3} more</span>}
+      </div>}
+      {soon.length>0&&<div style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"#b45309",fontWeight:600}}>
+        <span>🔔</span> Due within 48h:
+        {soon.slice(0,3).map(i=><span key={i.id} style={{background:"#fef9c3",border:"1px solid #fef08a",borderRadius:6,padding:"1px 7px",fontSize:11,fontWeight:500,color:"#713f12"}}>{i.title.slice(0,28)}{i.title.length>28?"…":""} — {fmtDate(i.due)}</span>)}
+      </div>}
+    </div>
+  );
+}
+
+// ── Item Card ─────────────────────────────────────────────────────────────────
+function ItemCard({item,settings,onEdit,onDelete,onCycleStatus,allItems,query="",onArchive}){
+  const pri=getPri(item.priority),sta=getSta(item.status),sec=getSec(item.section),od=isOverdue(item.due),ds=isDueSoon(item.due);
+  const jiraBoard=settings.jiraBoards?.find(b=>item.jira&&item.jira.toUpperCase().startsWith(b.prefix.toUpperCase()));
+  const jiraLink=jiraBoard?`${jiraBoard.base}/${item.jira}`:null;
+  const linked=(item.linkedItems||[]).map(id=>allItems.find(i=>i.id===id)).filter(Boolean);
+  return(
+    <div className="fade-in" style={{background:C.card,border:`1px solid ${ds?"#fde68a":od?"#fca5a8":C.border}`,borderRadius:12,padding:"15px 17px",position:"relative",borderLeft:`3px solid ${sec.color}`,opacity:item.archived?0.65:1}}>
+      <div style={{paddingRight:60,marginBottom:4}}>
+        <div style={{fontSize:13,fontWeight:600,color:C.text,lineHeight:1.4}}>{query?highlight(item.title,query):item.title}</div>
+        {item.workstream&&<div style={{fontSize:10,color:C.text3,marginTop:1}}>📁 {item.workstream}</div>}
+        {item.attendees&&<div style={{fontSize:11,color:C.text3,marginTop:1}}>👥 {item.attendees}</div>}
+      </div>
+      {TEMPLATE_FIELDS.filter(f=>item[f.key]?.trim()).slice(0,3).map(f=>(
+        <div key={f.key} style={{marginBottom:4}}>
+          <span style={{fontSize:10,fontWeight:700,color:C.text3,textTransform:"uppercase",letterSpacing:"0.05em"}}>{f.icon} {f.label}: </span>
+          <span style={{fontSize:12,color:C.text2,lineHeight:1.5}}>{query?highlight(item[f.key].slice(0,100),query):item[f.key].slice(0,100)}{item[f.key].length>100?"…":""}</span>
+        </div>
+      ))}
+      {linked.length>0&&(
+        <div style={{marginTop:8,padding:"7px 10px",background:C.cream,borderRadius:8,border:`1px solid ${C.border}`}}>
+          <div style={{fontSize:10,fontWeight:700,color:C.text3,letterSpacing:"0.05em",marginBottom:4}}>🔗 LINKED</div>
+          {linked.map(li=>(
+            <div key={li.id} style={{fontSize:11,color:C.text2,display:"flex",alignItems:"center",gap:5,marginBottom:2}}>
+              <span style={{color:getSec(li.section).color}}>{getSec(li.section).icon}</span>
+              <span style={{fontWeight:500,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{li.title}</span>
+              <Tag label={getSta(li.status).label} color={getSta(li.status).dot}/>
+            </div>
+          ))}
+        </div>
+      )}
+      <div style={{display:"flex",flexWrap:"wrap",gap:5,marginTop:10}}>
+        <Tag label={pri.label.toUpperCase()} color={pri.color}/>
+        <span onClick={()=>onCycleStatus&&onCycleStatus(item)} style={{fontSize:10,fontWeight:600,color:C.text2,background:C.bg,padding:"2px 8px",borderRadius:20,border:`1px solid ${C.border}`,display:"inline-flex",alignItems:"center",gap:4,cursor:onCycleStatus?"pointer":"default"}}>
+          <span style={{width:6,height:6,borderRadius:"50%",background:sta.dot}}/>{sta.label}
+        </span>
+        <Tag label={sec.tag||sec.label} color={sec.color}/>
+        {item.startDate&&item.due&&item.startDate!==item.due&&<span style={{fontSize:10,color:C.text3,background:C.cream,padding:"2px 7px",borderRadius:20,border:`1px solid ${C.border}`}}>{fmtDate(item.startDate)} → {fmtDate(item.due)}</span>}
+        {item.due&&(!item.startDate||item.startDate===item.due)&&<span style={{fontSize:10,fontWeight:600,color:od?"#ef4444":ds?"#b45309":C.text3,background:od?"#fef2f2":ds?"#fffbeb":C.cream,padding:"2px 7px",borderRadius:20,border:`1px solid ${od?"#fca5a8":ds?"#fde68a":C.border}`}}>{od?"⏰ ":ds?"🔔 ":""}{fmtDate(item.due)}</span>}
+        {item.carryOver&&item.status!=="done"&&<Tag label="↻ Carry" color="#f59e0b"/>}
+        {item.jira&&<LinkChip href={jiraLink} label={`⬡ ${item.jira}`} color="#3b82f6"/>}
+      </div>
+      <div style={{position:"absolute",top:12,right:12,display:"flex",gap:2}}>
+        {onEdit&&<button onClick={()=>onEdit(item)} style={{background:"transparent",border:"none",color:C.text3,fontSize:13,padding:"2px 5px"}}>✎</button>}
+        {onArchive&&item.status==="done"&&<button onClick={()=>onArchive(item.id)} title="Archive" style={{background:"transparent",border:"none",color:C.text3,fontSize:11,padding:"2px 5px"}}>📦</button>}
+        {onDelete&&<button onClick={()=>onDelete(item.id)} style={{background:"transparent",border:"none",color:C.text3,fontSize:11,padding:"2px 5px"}}>✕</button>}
+      </div>
+    </div>
+  );
+}
+
+// ── AI Action Item Extractor ──────────────────────────────────────────────────
+function AIExtractor({text,onAddItems,onClose}){
+  const [loading,setLoading]=useState(false);
+  const [results,setResults]=useState(null);
+  const [selected,setSelected]=useState([]);
+  const [error,setError]=useState("");
+
+  async function extract(){
+    if(!text.trim()){setError("No text to analyze.");return;}
+    setLoading(true);setError("");setResults(null);
+    try{
+      const resp=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          model:"claude-sonnet-4-20250514",
+          max_tokens:1000,
+          messages:[{role:"user",content:`Extract all action items from the following meeting notes. Return ONLY a JSON array, no other text, no markdown backticks. Each object should have: "title" (short action item title), "owner" (person responsible, default "Salma" if unclear), "due" (due date as YYYY-MM-DD if mentioned, else ""), "priority" ("urgent","high","normal","low"), "raw" (the original text that triggered this). Notes:\n\n${text}`}]
+        })
+      });
+      const data=await resp.json();
+      const raw=data.content?.[0]?.text||"[]";
+      const parsed=JSON.parse(raw.replace(/```json|```/g,"").trim());
+      setResults(parsed);
+      setSelected(parsed.map((_,i)=>i));
+    }catch(e){setError("Could not extract — check your connection or try again.");}
+    setLoading(false);
+  }
+
+  function addSelected(){
+    const items=results.filter((_,i)=>selected.includes(i)).map(r=>({
+      id:Date.now()+Math.random(),section:"insight",title:r.title,workstream:"",
+      agenda:"",decisions:"",actions:r.raw||"",nextsteps:"",blockers:"",notes:"",
+      priority:r.priority||"normal",status:"pending",owner:r.owner||"Salma",
+      jira:"",startDate:todayStr(),due:r.due||"",carryOver:true,date:todayStr(),
+      type:"checkin",linkedItems:[],archived:false,
+    }));
+    onAddItems(items);
+  }
+
+  return(
+    <div style={{position:"fixed",inset:0,background:"#00000050",display:"flex",alignItems:"center",justifyContent:"center",zIndex:400,padding:20}}>
+      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:24,width:"100%",maxWidth:560,maxHeight:"88vh",overflowY:"auto"}}>
+        <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:4}}>🤖 AI Action Item Extractor</div>
+        <div style={{fontSize:12,color:C.text3,marginBottom:16}}>Claude will scan your notes and extract action items, owners, and due dates automatically.</div>
+
+        <div style={{background:C.cream,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:12,color:C.text2,maxHeight:120,overflowY:"auto",fontStyle:"italic"}}>
+          {text||<span style={{color:C.text3}}>No text yet — write notes first then come back here.</span>}
+        </div>
+
+        {error&&<div style={{background:"#fef2f2",border:"1px solid #fca5a5",borderRadius:8,padding:"8px 12px",fontSize:12,color:"#ef4444",marginBottom:12}}>{error}</div>}
+
+        {!results&&(
+          <button onClick={extract} disabled={loading||!text.trim()}
+            style={{width:"100%",padding:"10px",borderRadius:9,border:"none",background:loading?"#d4c9bb":C.accent,color:"#fff",fontSize:13,fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+            {loading?<><span className="spin" style={{display:"inline-block"}}>⟳</span> Analyzing notes…</>:"🤖 Extract Action Items"}
+          </button>
+        )}
+
+        {results&&results.length===0&&<div style={{textAlign:"center",padding:"20px 0",color:C.text3,fontSize:13}}>No action items found in these notes.</div>}
+
+        {results&&results.length>0&&(
+          <div>
+            <div style={{fontSize:12,fontWeight:700,color:C.text2,marginBottom:10}}>Found {results.length} action item{results.length>1?"s":""}. Select which to add as cards:</div>
+            {results.map((r,i)=>(
+              <div key={i} onClick={()=>setSelected(s=>s.includes(i)?s.filter(x=>x!==i):[...s,i])}
+                style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 12px",borderRadius:9,marginBottom:6,background:selected.includes(i)?C.accent+"12":C.bg,border:`1px solid ${selected.includes(i)?C.accent:C.border}`,cursor:"pointer"}}>
+                <div style={{width:16,height:16,borderRadius:4,border:`2px solid ${selected.includes(i)?C.accent:C.border2}`,background:selected.includes(i)?C.accent:"transparent",flexShrink:0,marginTop:1,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  {selected.includes(i)&&<span style={{color:"#fff",fontSize:10}}>✓</span>}
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:600,color:C.text,marginBottom:3}}>{r.title}</div>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                    {r.owner&&<Tag label={r.owner} color="#5b5bd6"/>}
+                    {r.due&&<span style={{fontSize:10,color:C.text3}}>📅 {fmtDate(r.due)}</span>}
+                    <Tag label={getPri(r.priority).label} color={getPri(r.priority).color}/>
+                  </div>
+                  {r.raw&&<div style={{fontSize:11,color:C.text3,marginTop:3,fontStyle:"italic"}}>"{r.raw.slice(0,80)}{r.raw.length>80?"…":""}"</div>}
+                </div>
+              </div>
+            ))}
+            <div style={{display:"flex",gap:10,marginTop:12}}>
+              <button onClick={onClose} style={{flex:1,padding:"9px",borderRadius:8,border:`1px solid ${C.border}`,background:"transparent",color:C.text2,fontSize:13}}>Cancel</button>
+              <button onClick={()=>{addSelected();onClose();}} disabled={!selected.length}
+                style={{flex:2,padding:"9px",borderRadius:8,border:"none",background:selected.length?C.accent:"#d4c9bb",color:"#fff",fontSize:13,fontWeight:600}}>
+                Add {selected.length} Card{selected.length!==1?"s":""} →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!results&&<button onClick={onClose} style={{width:"100%",padding:"8px",borderRadius:8,border:`1px solid ${C.border}`,background:"transparent",color:C.text2,fontSize:13,marginTop:10}}>Cancel</button>}
+      </div>
+    </div>
+  );
+}
+
+// ── Meeting Prep View ─────────────────────────────────────────────────────────
+function MeetingPrepView({items,onEdit}){
+  const [selectedMeeting,setSelectedMeeting]=useState(ALL_TEMPLATES[0]);
+  const carryOvers=useMemo(()=>{
+    const lw=lastWeekStr();
+    return items.filter(i=>!i.archived&&i.status!=="done"&&i.carryOver&&i.date>=lw&&(i.section===selectedMeeting.section||selectedMeeting.section==="meetings"));
+  },[items,selectedMeeting]);
+  const blocked=items.filter(i=>!i.archived&&i.status==="blocked"&&(i.section===selectedMeeting.section||selectedMeeting.section==="meetings"));
+  const urgent=items.filter(i=>!i.archived&&i.status!=="done"&&["urgent","high"].includes(i.priority)&&(i.section===selectedMeeting.section||selectedMeeting.section==="meetings"));
+  const sec=getSec(selectedMeeting.section);
+
+  return(
+    <div style={{display:"grid",gridTemplateColumns:"300px 1fr",gap:16,alignItems:"start"}}>
+      {/* Left: select meeting */}
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"14px 15px"}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.text2,letterSpacing:"0.06em",marginBottom:10}}>SELECT MEETING</div>
+          {ALL_TEMPLATES.map(t=>(
+            <button key={t.label} onClick={()=>setSelectedMeeting(t)}
+              style={{width:"100%",textAlign:"left",padding:"9px 11px",borderRadius:9,border:`1px solid ${selectedMeeting.label===t.label?getSec(t.section).color:C.border}`,background:selectedMeeting.label===t.label?getSec(t.section).color+"12":"transparent",color:selectedMeeting.label===t.label?getSec(t.section).color:C.text2,fontSize:12,marginBottom:5,display:"flex",alignItems:"center",gap:7,fontWeight:selectedMeeting.label===t.label?600:400}}>
+              <span style={{color:getSec(t.section).color}}>{getSec(t.section).icon}</span>{t.label}
+            </button>
+          ))}
+        </div>
+        {/* Upcoming DOE dates */}
+        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"14px 15px"}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.text2,letterSpacing:"0.06em",marginBottom:8}}>📅 UPCOMING DOE DATES</div>
+          {DOE_HOLIDAYS_2025_26.filter(h=>h.date>=todayStr()).slice(0,4).map(h=>(
+            <div key={h.date} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5,fontSize:11}}>
+              <span style={{color:C.text2}}>{h.label}</span>
+              <span style={{color:C.text3,fontFamily:"'DM Mono',monospace"}}>{fmtDate(h.date)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Right: prep brief */}
+      <div style={{display:"flex",flexDirection:"column",gap:12}}>
+        {/* Header */}
+        <div style={{background:C.card,border:`1px solid ${C.border}`,borderLeft:`4px solid ${sec.color}`,borderRadius:12,padding:"16px 20px"}}>
+          <div style={{fontSize:17,fontWeight:700,color:C.text,fontFamily:"'Lora',serif",marginBottom:4}}>{sec.icon} {selectedMeeting.title}</div>
+          {selectedMeeting.attendees&&<div style={{fontSize:12,color:C.text3,marginBottom:4}}>👥 {selectedMeeting.attendees}</div>}
+          <div style={{fontSize:11,color:C.text3}}>{new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}</div>
+        </div>
+
+        {/* Standard agenda */}
+        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"16px 20px"}}>
+          <div style={{fontSize:12,fontWeight:700,color:sec.color,letterSpacing:"0.06em",marginBottom:10}}>📋 STANDING AGENDA</div>
+          {selectedMeeting.agenda.split("\n").filter(Boolean).map((line,i)=>(
+            <div key={i} style={{fontSize:13,color:C.text2,padding:"5px 0",borderBottom:i<selectedMeeting.agenda.split("\n").filter(Boolean).length-1?`1px solid ${C.border}`:"none",lineHeight:1.5}}>{line}</div>
+          ))}
+        </div>
+
+        {/* Carry-overs to discuss */}
+        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"16px 20px"}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#f59e0b",letterSpacing:"0.06em",marginBottom:10}}>↻ CARRY-OVERS TO DISCUSS ({carryOvers.length})</div>
+          {!carryOvers.length&&<div style={{fontSize:12,color:C.text3}}>No carry-overs from last week 🎉</div>}
+          {carryOvers.map(item=>(
+            <div key={item.id} onClick={()=>onEdit(item)} style={{padding:"9px 11px",borderRadius:9,marginBottom:6,background:C.cream,cursor:"pointer",borderLeft:`3px solid ${getPri(item.priority).color}`}}>
+              <div style={{fontSize:12,fontWeight:600,color:C.text,marginBottom:3}}>{item.title}</div>
+              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                <Tag label={getPri(item.priority).label} color={getPri(item.priority).color}/>
+                <Tag label={getSta(item.status).label} color={getSta(item.status).dot}/>
+                {item.due&&<span style={{fontSize:10,color:isOverdue(item.due)?"#ef4444":C.text3}}>{isOverdue(item.due)?"⏰ ":""}{fmtDate(item.due)}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Blockers */}
+        {blocked.length>0&&(
+          <div style={{background:"#fef2f2",border:"1px solid #fca5a5",borderRadius:12,padding:"16px 20px"}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#ef4444",letterSpacing:"0.06em",marginBottom:10}}>⚠ ACTIVE BLOCKERS ({blocked.length})</div>
+            {blocked.map(item=>(
+              <div key={item.id} style={{fontSize:12,color:C.text,padding:"5px 0",borderBottom:`1px solid #fca5a544`,display:"flex",gap:8,alignItems:"center"}}>
+                <span style={{color:"#ef4444"}}>●</span>{item.title}
+                {item.blockers&&<span style={{fontSize:11,color:"#ef4444",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>— {item.blockers}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Urgent items */}
+        {urgent.length>0&&(
+          <div style={{background:"#fff7ed",border:"1px solid #fed7aa",borderRadius:12,padding:"16px 20px"}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#f97316",letterSpacing:"0.06em",marginBottom:10}}>🔥 URGENT / HIGH PRIORITY ({urgent.length})</div>
+            {urgent.map(item=>(
+              <div key={item.id} style={{fontSize:12,color:C.text,padding:"5px 0",borderBottom:`1px solid #fed7aa44`,display:"flex",gap:8,alignItems:"center"}}>
+                <span style={{color:getPri(item.priority).color}}>●</span>{item.title}
+                {item.due&&<span style={{fontSize:11,color:isOverdue(item.due)?"#ef4444":"#f97316",marginLeft:"auto"}}>{fmtDate(item.due)}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Notes History View ────────────────────────────────────────────────────────
+function HistoryView({items,onEdit,settings}){
+  const [filterSection,setFilterSection]=useState("all");
+  const [filterMonth,setFilterMonth]=useState("all");
+  const allMonths=useMemo(()=>{
+    const months=new Set(items.filter(i=>i.date).map(i=>i.date.slice(0,7)));
+    return [...months].sort().reverse();
+  },[items]);
+  const filtered=useMemo(()=>items.filter(i=>{
+    if(filterSection!=="all"&&i.section!==filterSection)return false;
+    if(filterMonth!=="all"&&(!i.date||!i.date.startsWith(filterMonth)))return false;
+    return true;
+  }).sort((a,b)=>b.date?.localeCompare(a.date||"")||0),[items,filterSection,filterMonth]);
+  const byDate=useMemo(()=>{
+    const map={};
+    filtered.forEach(item=>{const k=item.date||"Unknown";if(!map[k])map[k]=[];map[k].push(item);});
+    return map;
+  },[filtered]);
+  const dates=Object.keys(byDate).sort().reverse();
+
+  return(
+    <div>
+      <div style={{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap",alignItems:"center"}}>
+        <div style={{fontSize:14,fontWeight:700,color:C.text,flex:1}}>🗂 Notes History</div>
+        <select value={filterSection} onChange={e=>setFilterSection(e.target.value)} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 10px",color:C.text,fontSize:12,outline:"none"}}>
+          <option value="all">All Sections</option>
+          {SECTIONS.filter(s=>s.id!=="all").map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
+        </select>
+        <select value={filterMonth} onChange={e=>setFilterMonth(e.target.value)} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 10px",color:C.text,fontSize:12,outline:"none"}}>
+          <option value="all">All Months</option>
+          {allMonths.map(m=>{const d=new Date(m+"-01");return<option key={m} value={m}>{d.toLocaleDateString("en-US",{month:"long",year:"numeric"})}</option>;})}
+        </select>
+      </div>
+      {!dates.length&&<div style={{textAlign:"center",padding:"40px 0",color:C.text3}}><div style={{fontSize:36,marginBottom:10}}>🗂</div><div style={{fontSize:14,color:C.text2}}>No notes yet. Save a check-in from the Notes view.</div></div>}
+      {dates.map(date=>(
+        <div key={date} style={{marginBottom:20}}>
+          <div style={{fontSize:12,fontWeight:700,color:C.text2,letterSpacing:"0.06em",marginBottom:8,padding:"4px 0",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:8}}>
+            📅 {fmtDateFull(date)} <span style={{fontSize:10,color:C.text3,fontWeight:400}}>({byDate[date].length} item{byDate[date].length!==1?"s":""})</span>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:10}}>
+            {byDate[date].map(item=><ItemCard key={item.id} item={item} settings={settings} onEdit={onEdit} allItems={items}/>)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Archive View ──────────────────────────────────────────────────────────────
+function ArchiveView({items,onUnarchive,onDelete,settings}){
+  const archived=items.filter(i=>i.archived);
+  return(
+    <div>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+        <div style={{fontSize:14,fontWeight:700,color:C.text}}>📦 Archive</div>
+        <div style={{fontSize:12,color:C.text3}}>{archived.length} item{archived.length!==1?"s":""}</div>
+      </div>
+      {!archived.length&&<div style={{textAlign:"center",padding:"40px 0",color:C.text3}}><div style={{fontSize:36,marginBottom:10}}>📦</div><div style={{fontSize:14,color:C.text2}}>Nothing archived yet.</div><div style={{fontSize:12,marginTop:6}}>Mark items as Done then click 📦 on the card to archive them.</div></div>}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
+        {archived.map(item=>(
+          <div key={item.id} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"14px 16px",opacity:0.8,position:"relative"}}>
+            <div style={{fontSize:13,fontWeight:600,color:C.text2,marginBottom:4,paddingRight:60}}>{item.title}</div>
+            {item.workstream&&<div style={{fontSize:10,color:C.text3,marginBottom:6}}>📁 {item.workstream}</div>}
+            <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:8}}>
+              <Tag label={getSec(item.section).tag||getSec(item.section).label} color={getSec(item.section).color}/>
+              {item.date&&<span style={{fontSize:10,color:C.text3}}>{fmtDate(item.date)}</span>}
+              {item.jira&&<Tag label={`⬡ ${item.jira}`} color="#3b82f6"/>}
+            </div>
+            <div style={{position:"absolute",top:12,right:12,display:"flex",gap:4}}>
+              <button onClick={()=>onUnarchive(item.id)} title="Restore" style={{fontSize:11,color:"#10b981",background:"#ecfdf5",border:"1px solid #6ee7b7",borderRadius:6,padding:"2px 7px",fontWeight:600}}>↩ Restore</button>
+              <button onClick={()=>onDelete(item.id)} style={{background:"transparent",border:"none",color:C.text3,fontSize:11}}>✕</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Key Dates View ────────────────────────────────────────────────────────────
+function KeyDatesView({customDates,onCustomDatesChange}){
+  const [showAdd,setShowAdd]=useState(false);
+  const [form,setForm]=useState({label:"",date:"",type:"deadline",person:""});
+
+  const DATE_TYPES=[
+    {id:"holiday",label:"DOE Holiday / Break",color:"#10b981"},
+    {id:"deadline",label:"Deadline",color:"#ef4444"},
+    {id:"release",label:"Product Release / QC",color:"#8b5cf6"},
+    {id:"pto",label:"Team PTO / OoO",color:"#f59e0b"},
+    {id:"custom",label:"Custom",color:"#5b5bd6"},
+  ];
+  const getTypeInfo=id=>DATE_TYPES.find(t=>t.id===id)||DATE_TYPES[4];
+
+  const allDates=useMemo(()=>[
+    ...DOE_HOLIDAYS_2025_26.map(h=>({...h,source:"doe",id:`doe-${h.date}`})),
+    ...(customDates||[]).map(d=>({...d,source:"custom"})),
+  ].sort((a,b)=>a.date.localeCompare(b.date)),[customDates]);
+
+  const upcoming=allDates.filter(d=>d.date>=todayStr());
+  const past=allDates.filter(d=>d.date<todayStr()).reverse().slice(0,10);
+
+  function addDate(){
+    if(!form.label||!form.date)return;
+    const nd={id:`custom-${Date.now()}`,label:form.label,date:form.date,type:form.type,person:form.person,source:"custom"};
+    onCustomDatesChange([...(customDates||[]),nd]);
+    setForm({label:"",date:"",type:"deadline",person:""});
+    setShowAdd(false);
+  }
+  function deleteCustom(id){onCustomDatesChange((customDates||[]).filter(d=>d.id!==id));}
+
+  const grouped=useMemo(()=>{
+    const map={};
+    upcoming.forEach(d=>{const k=d.date.slice(0,7);if(!map[k])map[k]=[];map[k].push(d);});
+    return map;
+  },[upcoming]);
+  const months=Object.keys(grouped).sort();
+
+  return(
+    <div style={{maxWidth:760}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+        <div style={{fontSize:14,fontWeight:700,color:C.text}}>📌 Key Dates</div>
+        <button onClick={()=>setShowAdd(p=>!p)} style={{padding:"7px 16px",borderRadius:8,border:`1px solid ${C.accent}`,background:C.accent+"15",color:C.accent,fontSize:12,fontWeight:600}}>+ Add Date</button>
+      </div>
+
+      {/* Legend */}
+      <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:16}}>
+        {DATE_TYPES.map(t=><div key={t.id} style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:10,height:10,borderRadius:2,background:t.color}}/><span style={{fontSize:11,color:C.text3}}>{t.label}</span></div>)}
+      </div>
+
+      {/* Add form */}
+      {showAdd&&(
+        <div style={{background:C.card,border:`1px solid ${C.accent}`,borderRadius:12,padding:"16px 18px",marginBottom:16}}>
+          <div style={{fontSize:12,fontWeight:700,color:C.accent,marginBottom:12}}>+ ADD KEY DATE</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+            <div><label style={LABEL}>LABEL</label><input value={form.label} onChange={e=>setForm(f=>({...f,label:e.target.value}))} placeholder="e.g. NYSESLAT QC Deadline" style={mkInp()}/></div>
+            <div><label style={LABEL}>DATE</label><input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} style={mkInp()}/></div>
+            <div><label style={LABEL}>TYPE</label>
+              <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value}))} style={mkInp()}>
+                {DATE_TYPES.filter(t=>t.id!=="holiday").map(t=><option key={t.id} value={t.id}>{t.label}</option>)}
+              </select>
+            </div>
+            <div><label style={LABEL}>PERSON (for PTO)</label><input value={form.person} onChange={e=>setForm(f=>({...f,person:e.target.value}))} list="team-list" placeholder="e.g. Rebecca" style={mkInp()}/></div>
+          </div>
+          <TeamDatalist/>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>setShowAdd(false)} style={{flex:1,padding:"8px",borderRadius:8,border:`1px solid ${C.border}`,background:"transparent",color:C.text2,fontSize:12}}>Cancel</button>
+            <button onClick={addDate} style={{flex:2,padding:"8px",borderRadius:8,border:"none",background:C.accent,color:"#fff",fontSize:12,fontWeight:600}}>Save Date</button>
+          </div>
+        </div>
+      )}
+
+      {/* Upcoming */}
+      {months.map(m=>{
+        const d=new Date(m+"-01");
+        return(
+          <div key={m} style={{marginBottom:18}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.text2,letterSpacing:"0.06em",marginBottom:8,padding:"4px 0",borderBottom:`1px solid ${C.border}`}}>
+              {d.toLocaleDateString("en-US",{month:"long",year:"numeric"})}
+            </div>
+            {grouped[m].map(date=>{
+              const ti=getTypeInfo(date.type);
+              const daysUntil=Math.round((new Date(date.date+"T00:00:00")-new Date(new Date().toDateString()))/(1000*60*60*24));
+              return(
+                <div key={date.id} style={{display:"flex",alignItems:"center",gap:12,padding:"9px 12px",borderRadius:9,marginBottom:5,background:C.card,border:`1px solid ${C.border}`,borderLeft:`3px solid ${ti.color}`}}>
+                  <div style={{minWidth:60,textAlign:"center"}}>
+                    <div style={{fontSize:18,fontWeight:700,color:ti.color}}>{new Date(date.date+"T00:00:00").getDate()}</div>
+                    <div style={{fontSize:9,color:C.text3,textTransform:"uppercase"}}>{new Date(date.date+"T00:00:00").toLocaleDateString("en-US",{weekday:"short"})}</div>
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:13,fontWeight:600,color:C.text}}>{date.label}</div>
+                    {date.person&&<div style={{fontSize:11,color:C.text3}}>👤 {date.person}</div>}
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <Tag label={ti.label} color={ti.color}/>
+                    <span style={{fontSize:10,color:daysUntil<=3?"#ef4444":daysUntil<=7?"#f97316":C.text3,fontWeight:daysUntil<=7?600:400}}>
+                      {daysUntil===0?"Today":daysUntil===1?"Tomorrow":`${daysUntil}d`}
+                    </span>
+                    {date.source==="custom"&&<button onClick={()=>deleteCustom(date.id)} style={{background:"transparent",border:"none",color:C.text3,fontSize:11}}>✕</button>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+
+      {/* Past (collapsed) */}
+      {past.length>0&&(
+        <details style={{marginTop:10}}>
+          <summary style={{fontSize:12,color:C.text3,cursor:"pointer",padding:"6px 0"}}>▸ {past.length} past date{past.length>1?"s":""}</summary>
+          <div style={{marginTop:8,opacity:0.7}}>
+            {past.map(date=>{const ti=getTypeInfo(date.type);return(
+              <div key={date.id} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 12px",borderRadius:8,marginBottom:4,background:C.bg,borderLeft:`3px solid ${ti.color}44`}}>
+                <span style={{fontSize:11,color:C.text3,minWidth:65,fontFamily:"'DM Mono',monospace"}}>{fmtDate(date.date)}</span>
+                <span style={{fontSize:12,color:C.text3}}>{date.label}</span>
+              </div>
+            );})}
+          </div>
+        </details>
+      )}
+    </div>
+  );
+}
+
+// ── Note Page ─────────────────────────────────────────────────────────────────
+function NotePage({section,items,settings,onSaveCheckin,onEdit,onAddItems}){
+  const activeSection=section==="all"?"supervisor":section;
+  const sec=getSec(activeSection);
+  const defaultTemplate=WEEKLY_TEMPLATES[activeSection]||WEEKLY_TEMPLATES.supervisor;
+  const [mode,setMode]=useState("template");
+  const [title,setTitle]=useState("");
+  const [attendees,setAttendees]=useState(defaultTemplate.attendees||"");
+  const [workstream,setWorkstream]=useState("");
+  const [startDate,setStartDate]=useState(todayStr());
+  const [due,setDue]=useState(todayStr());
+  const [priority,setPriority]=useState("normal");
+  const [jira,setJira]=useState("");
+  const [fields,setFields]=useState({agenda:defaultTemplate.agenda,decisions:"",actions:"",nextsteps:"",blockers:"",notes:""});
+  const [blankText,setBlankText]=useState("");
+  const [linkedIds,setLinkedIds]=useState([]);
+  const [showLinkPicker,setShowLinkPicker]=useState(false);
+  const [linkSearch,setLinkSearch]=useState("");
+  const [saved,setSaved]=useState(false);
+  const [showExtractor,setShowExtractor]=useState(false);
+
+  const carryOvers=useMemo(()=>{const lw=lastWeekStr();return items.filter(i=>!i.archived&&i.section===activeSection&&i.status!=="done"&&i.carryOver&&i.date>=lw);},[items,activeSection]);
+
+  useEffect(()=>{
+    const t=WEEKLY_TEMPLATES[activeSection]||WEEKLY_TEMPLATES.supervisor;
+    setTitle("");setAttendees(t.attendees||"");setWorkstream("");
+    setFields({agenda:t.agenda,decisions:"",actions:"",nextsteps:"",blockers:"",notes:""});
+    setLinkedIds([]);setBlankText("");setStartDate(todayStr());setDue(todayStr());
+  },[activeSection]);
+
+  function loadTemplate(tmpl){
+    setTitle(tmpl.title+" — "+new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}));
+    setAttendees(tmpl.attendees||"");
+    setFields({agenda:tmpl.agenda,decisions:"",actions:"",nextsteps:"",blockers:"",notes:""});
+    setMode("template");
+  }
+  function saveAsCard(){
+    if(!title.trim())return;
+    onSaveCheckin({id:Date.now(),section:activeSection,title,attendees,workstream,...fields,blankNotes:blankText,priority,status:"pending",owner:"Salma",jira,startDate,due,carryOver:true,date:todayStr(),type:activeSection==="meetings"?"meeting":"checkin",linkedItems:linkedIds,archived:false});
+    setSaved(true);setTimeout(()=>setSaved(false),2000);
+    const t=WEEKLY_TEMPLATES[activeSection]||WEEKLY_TEMPLATES.supervisor;
+    setTitle("");setAttendees(t.attendees||"");setLinkedIds([]);setBlankText("");setWorkstream("");
+    setFields({agenda:t.agenda,decisions:"",actions:"",nextsteps:"",blockers:"",notes:""});
+  }
+
+  const currentText=[fields.agenda,fields.decisions,fields.actions,fields.nextsteps,fields.blockers,fields.notes,blankText].filter(Boolean).join("\n\n");
+  const linkableItems=items.filter(i=>!linkedIds.includes(i.id)&&(linkSearch===""||i.title.toLowerCase().includes(linkSearch.toLowerCase())));
+  const linkedObjs=linkedIds.map(id=>items.find(i=>i.id===id)).filter(Boolean);
+  const recentItems=items.filter(i=>!i.archived&&i.section===activeSection).slice(0,4);
+
+  return(
+    <div style={{display:"grid",gridTemplateColumns:"1fr 305px",gap:14,alignItems:"start"}}>
+      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+        {/* Header */}
+        <div style={{padding:"12px 16px",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:8,background:sec.color+"08",flexShrink:0,flexWrap:"wrap"}}>
+          <span style={{fontSize:18,color:sec.color}}>{sec.icon}</span>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:700,color:C.text,fontFamily:"'Lora',serif"}}>{sec.label}</div>
+            <div style={{fontSize:10,color:C.text3}}>{new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"})}</div>
+          </div>
+          <button onClick={()=>setShowExtractor(true)} style={{padding:"4px 10px",borderRadius:7,border:`1px solid #8b5cf6`,background:"#8b5cf615",color:"#8b5cf6",fontSize:10,fontWeight:600}}>🤖 AI Extract</button>
+          {ALL_TEMPLATES.filter(t=>t.section===activeSection).map(t=>(
+            <button key={t.label} onClick={()=>loadTemplate(t)} style={{padding:"4px 10px",borderRadius:7,border:`1px solid ${sec.color}`,background:sec.color+"15",color:sec.color,fontSize:10,fontWeight:600,whiteSpace:"nowrap"}}>↺ {t.label.split(" (")[0]}</button>
+          ))}
+          {["blank","template"].map(m=>(
+            <button key={m} onClick={()=>setMode(m)} style={{padding:"4px 10px",borderRadius:7,border:`1px solid ${mode===m?sec.color:C.border}`,background:mode===m?sec.color+"18":"transparent",color:mode===m?sec.color:C.text2,fontSize:11,fontWeight:600,textTransform:"capitalize"}}>{m}</button>
+          ))}
+        </div>
+
+        <div style={{padding:"14px 18px",overflowY:"auto",flex:1,maxHeight:"calc(100vh - 250px)"}}>
+          <TeamDatalist/><WorkstreamDatalist/>
+
+          {/* Carry-over banner */}
+          {carryOvers.length>0&&(
+            <div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:9,padding:"9px 13px",marginBottom:12}}>
+              <div style={{fontSize:11,fontWeight:700,color:"#92400e",marginBottom:6}}>↻ CARRY-OVERS ({carryOvers.length})</div>
+              {carryOvers.map(item=>(
+                <div key={item.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:3,fontSize:12}}>
+                  <span style={{color:getPri(item.priority).color,fontWeight:700}}>●</span>
+                  <span style={{color:C.text,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.title}</span>
+                  <Tag label={getSta(item.status).label} color={getSta(item.status).dot}/>
+                  {item.due&&<span style={{fontSize:10,color:isOverdue(item.due)?"#ef4444":C.text3}}>{isOverdue(item.due)?"⏰ ":""}{fmtDate(item.due)}</span>}
+                  <button onClick={()=>setLinkedIds(ids=>ids.includes(item.id)?ids:[...ids,item.id])} style={{fontSize:9,color:C.accent,background:C.accent+"15",border:`1px solid ${C.accent}33`,borderRadius:5,padding:"1px 6px",fontWeight:600}}>Link</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <input value={title} onChange={e=>setTitle(e.target.value)} placeholder={activeSection==="meetings"?"Meeting title…":"Check-in title / topic…"}
+            style={{width:"100%",border:"none",borderBottom:`2px solid ${title?sec.color:C.border}`,background:"transparent",fontSize:19,fontWeight:600,color:C.text,outline:"none",padding:"2px 0 9px",marginBottom:12,fontFamily:"'Lora',serif",transition:"border-color 0.2s"}}/>
+
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:9,marginBottom:12}}>
+            {(activeSection==="meetings"||activeSection==="events")&&(
+              <div style={{gridColumn:"1/-1"}}><label style={LABEL}>ATTENDEES</label><input value={attendees} onChange={e=>setAttendees(e.target.value)} list="team-list" placeholder="e.g. Japeck, Rachel, Alena…" style={mkInp()}/></div>
+            )}
+            <div><label style={LABEL}>WORK STREAM</label><input value={workstream} onChange={e=>setWorkstream(e.target.value)} list="ws-list" placeholder="Select or type…" style={mkInp()}/></div>
+            <div><label style={LABEL}>START DATE</label><input type="date" value={startDate} onChange={e=>setStartDate(e.target.value)} style={mkInp()}/></div>
+            <div><label style={LABEL}>DUE DATE</label><input type="date" value={due} onChange={e=>setDue(e.target.value)} style={mkInp()}/></div>
+            <div><label style={LABEL}>PRIORITY</label>
+              <select value={priority} onChange={e=>setPriority(e.target.value)} style={mkInp()}>
+                {PRIORITIES.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}
+              </select>
+            </div>
+            <div><label style={LABEL}>JIRA</label><input value={jira} onChange={e=>setJira(e.target.value)} placeholder="TDPGM-9217" style={mkInp({fontFamily:"'DM Mono',monospace"})}/></div>
+          </div>
+
+          {/* Link picker */}
+          <div style={{marginBottom:12}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5}}>
+              <label style={LABEL}>🔗 LINK TO EXISTING ITEMS</label>
+              <button onClick={()=>setShowLinkPicker(p=>!p)} style={{fontSize:11,color:C.accent,background:"transparent",border:`1px solid ${C.accent}`,borderRadius:6,padding:"2px 8px",fontWeight:600}}>{showLinkPicker?"Hide":"+ Link"}</button>
+            </div>
+            {linkedObjs.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:7}}>
+              {linkedObjs.map(li=>(
+                <div key={li.id} style={{display:"flex",alignItems:"center",gap:4,background:C.cream,border:`1px solid ${C.border}`,borderRadius:6,padding:"3px 8px",fontSize:11}}>
+                  <span style={{color:getSec(li.section).color}}>{getSec(li.section).icon}</span>
+                  <span style={{color:C.text,maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{li.title}</span>
+                  <button onClick={()=>setLinkedIds(ids=>ids.filter(id=>id!==li.id))} style={{background:"transparent",border:"none",color:C.text3,fontSize:10}}>✕</button>
+                </div>
+              ))}
+            </div>}
+            {showLinkPicker&&(
+              <div style={{background:C.cream,border:`1px solid ${C.border}`,borderRadius:10,padding:10}}>
+                <input value={linkSearch} onChange={e=>setLinkSearch(e.target.value)} placeholder="Search items…" style={{width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 10px",color:C.text,fontSize:12,outline:"none",marginBottom:6}}/>
+                <div style={{maxHeight:140,overflowY:"auto"}}>
+                  {linkableItems.filter(i=>!i.archived).slice(0,20).map(li=>(
+                    <div key={li.id} onClick={()=>{setLinkedIds(ids=>[...ids,li.id]);setShowLinkPicker(false);setLinkSearch("");}}
+                      style={{padding:"6px 8px",borderRadius:6,cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontSize:11}}
+                      onMouseEnter={e=>e.currentTarget.style.background=C.card}
+                      onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                      <span style={{color:getSec(li.section).color}}>{getSec(li.section).icon}</span>
+                      <span style={{color:C.text,flex:1}}>{li.title}</span>
+                      <Tag label={getSta(li.status).label} color={getSta(li.status).dot}/>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {mode==="blank"&&<textarea value={blankText} onChange={e=>setBlankText(e.target.value)} placeholder={"Free-form notes...\n\nJot anything here — switch to Template for structure."} rows={13} style={{width:"100%",background:"transparent",border:"none",resize:"none",outline:"none",fontSize:14,color:C.text,lineHeight:1.9}}/>}
+          {mode==="template"&&<div>{TEMPLATE_FIELDS.map((f,i)=>(
+            <div key={f.key} style={{borderBottom:i<TEMPLATE_FIELDS.length-1?`1px solid ${C.border}`:"none",paddingBottom:12,marginBottom:12}}>
+              <div style={{fontSize:11,fontWeight:700,color:sec.color,letterSpacing:"0.06em",marginBottom:5,display:"flex",alignItems:"center",gap:5}}>{f.icon} {f.label.toUpperCase()}</div>
+              <textarea value={fields[f.key]} onChange={e=>setFields(fv=>({...fv,[f.key]:e.target.value}))} placeholder={f.ph} rows={f.key==="agenda"?4:3}
+                style={{width:"100%",background:fields[f.key]?C.card:C.cream,border:`1px solid ${fields[f.key]?sec.color+"44":C.border}`,borderRadius:8,padding:"9px 11px",resize:"vertical",outline:"none",fontSize:13,color:C.text,lineHeight:1.7,transition:"border-color 0.2s"}}/>
+            </div>
+          ))}</div>}
+        </div>
+
+        <div style={{padding:"10px 16px",borderTop:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",background:C.cream,flexShrink:0}}>
+          <div style={{fontSize:11,color:C.text3}}>{!title.trim()?"Add a title to save":linkedIds.length>0?`🔗 ${linkedIds.length} linked`:carryOvers.length>0?`${carryOvers.length} carry-over${carryOvers.length>1?"s":""}`:""}</div>
+          <button onClick={saveAsCard} disabled={!title.trim()} style={{padding:"8px 20px",borderRadius:8,border:"none",background:saved?"#10b981":title.trim()?sec.color:"#d4c9bb",color:"#fff",fontSize:13,fontWeight:600,transition:"background 0.3s",cursor:title.trim()?"pointer":"default"}}>
+            {saved?"✓ Saved!":"Save as Card →"}
+          </button>
+        </div>
+      </div>
+
+      {/* Right panel */}
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"13px 14px"}}>
+          <div style={{fontSize:10,fontWeight:700,color:C.text2,letterSpacing:"0.06em",marginBottom:9}}>RECENT</div>
+          {!recentItems.length&&<div style={{fontSize:12,color:C.text3,textAlign:"center",padding:"10px 0"}}>No items yet</div>}
+          {recentItems.map(item=>(
+            <div key={item.id} onClick={()=>onEdit(item)} style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:9,padding:"9px 10px",marginBottom:5,cursor:"pointer",borderLeft:`3px solid ${getSec(item.section).color}`}}>
+              <div style={{fontSize:12,fontWeight:600,color:C.text,marginBottom:3,lineHeight:1.3}}>{item.title}</div>
+              <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                <Tag label={getPri(item.priority).label} color={getPri(item.priority).color}/>
+                <span style={{fontSize:10,color:C.text3,display:"flex",alignItems:"center",gap:3}}><span style={{width:5,height:5,borderRadius:"50%",background:getSta(item.status).dot,display:"inline-block"}}/>{getSta(item.status).label}</span>
+                {item.due&&<span style={{fontSize:10,color:isOverdue(item.due)?"#ef4444":C.text3}}>{fmtDate(item.due)}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{background:C.accent+"0e",border:`1px solid ${C.accent}33`,borderRadius:12,padding:"12px 14px"}}>
+          <div style={{fontSize:10,fontWeight:700,color:C.accent,letterSpacing:"0.06em",marginBottom:7}}>↺ MEETING TEMPLATES</div>
+          {ALL_TEMPLATES.map(t=>(
+            <button key={t.label} onClick={()=>loadTemplate(t)} style={{width:"100%",textAlign:"left",padding:"6px 9px",borderRadius:8,border:`1px solid ${C.accent}22`,background:"transparent",color:C.text2,fontSize:11,marginBottom:3,display:"flex",alignItems:"center",gap:5}}
+              onMouseEnter={e=>e.currentTarget.style.background=C.card} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              <span style={{color:getSec(t.section).color}}>{getSec(t.section).icon}</span>{t.label}
+            </button>
+          ))}
+        </div>
+        {/* Upcoming DOE dates */}
+        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 14px"}}>
+          <div style={{fontSize:10,fontWeight:700,color:C.text2,letterSpacing:"0.06em",marginBottom:7}}>📌 COMING UP</div>
+          {DOE_HOLIDAYS_2025_26.filter(h=>h.date>=todayStr()).slice(0,3).map(h=>(
+            <div key={h.date} style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:4,color:C.text2}}>
+              <span>🏖 {h.label}</span><span style={{color:C.text3,fontFamily:"'DM Mono',monospace",fontSize:10}}>{fmtDate(h.date)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {showExtractor&&<AIExtractor text={currentText} onAddItems={items=>{onAddItems(items);setShowExtractor(false);}} onClose={()=>setShowExtractor(false)}/>}
+    </div>
+  );
+}
+
+// ── Cards View ────────────────────────────────────────────────────────────────
+function CardsView({items,settings,onEdit,onDelete,onCycleStatus,allItems,onArchive}){
+  if(!items.length)return<div style={{textAlign:"center",color:C.text3,paddingTop:60}}><div style={{fontSize:36}}>◈</div><div style={{marginTop:10,fontSize:14}}>No items — start in Notes!</div></div>;
+  return<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(305px,1fr))",gap:12}}>
+    {items.map(item=><ItemCard key={item.id} item={item} settings={settings} onEdit={onEdit} onDelete={onDelete} onCycleStatus={onCycleStatus} allItems={allItems} onArchive={onArchive}/>)}
+  </div>;
+}
+
+// ── Search View ───────────────────────────────────────────────────────────────
+function SearchView({items,todos,onEdit,settings}){
+  const [q,setQ]=useState("");
+  const inputRef=useRef();
+  useEffect(()=>inputRef.current?.focus(),[]);
+  const results=useMemo(()=>{if(!q.trim())return[];const lq=q.toLowerCase();return items.filter(item=>[item.title,item.agenda,item.decisions,item.actions,item.nextsteps,item.blockers,item.notes,item.attendees,item.jira,item.workstream].some(f=>f&&f.toLowerCase().includes(lq))).sort((a,b)=>{const at=a.title.toLowerCase().includes(lq),bt=b.title.toLowerCase().includes(lq);if(at&&!bt)return -1;if(bt&&!at)return 1;return 0;});},[items,q]);
+  const todoR=useMemo(()=>q.trim()?todos.filter(t=>t.text.toLowerCase().includes(q.toLowerCase())):[],[todos,q]);
+  return(
+    <div style={{maxWidth:760}}>
+      <div style={{background:C.card,border:`2px solid ${q?C.accent:C.border}`,borderRadius:12,padding:"10px 16px",display:"flex",alignItems:"center",gap:10,marginBottom:20,transition:"border-color 0.2s"}}>
+        <span style={{fontSize:18,color:C.text3}}>🔍</span>
+        <input ref={inputRef} value={q} onChange={e=>setQ(e.target.value)} placeholder="Search titles, decisions, action items, Jira tickets, attendees, work streams…" style={{flex:1,border:"none",background:"transparent",fontSize:15,color:C.text,outline:"none"}}/>
+        {q&&<button onClick={()=>setQ("")} style={{background:"transparent",border:"none",color:C.text3,fontSize:14}}>✕</button>}
+      </div>
+      {!q&&<div style={{textAlign:"center",padding:"40px 0",color:C.text3}}><div style={{fontSize:36,marginBottom:12}}>🔍</div><div style={{fontSize:15,fontWeight:600,color:C.text2,marginBottom:6}}>Search everything</div></div>}
+      {q&&!results.length&&!todoR.length&&<div style={{textAlign:"center",padding:"40px 0",color:C.text3}}><div style={{fontSize:32,marginBottom:10}}>🤷</div><div style={{fontSize:14,color:C.text2}}>No results for "<strong>{q}</strong>"</div></div>}
+      {q&&(results.length>0||todoR.length>0)&&<div>
+        <div style={{fontSize:12,color:C.text3,marginBottom:12,fontWeight:600}}>{results.length+todoR.length} result{results.length+todoR.length!==1?"s":""} for "<strong style={{color:C.text}}>{q}</strong>"</div>
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {results.map(item=><ItemCard key={item.id} item={item} settings={settings} onEdit={onEdit} onDelete={()=>{}} onCycleStatus={()=>{}} allItems={items} query={q}/>)}
+          {todoR.map(t=><div key={t.id} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 16px",display:"flex",alignItems:"center",gap:10}}><span style={{color:t.done?"#10b981":C.text3}}>{t.done?"✓":"○"}</span><span style={{fontSize:13,color:t.done?C.text3:C.text,textDecoration:t.done?"line-through":"none"}}>{highlight(t.text,q)}</span><Tag label="Quick Task" color="#94a3b8"/><span style={{fontSize:10,color:C.text3,marginLeft:"auto"}}>{t.date}</span></div>)}
+        </div>
+      </div>}
+    </div>
+  );
+}
+
+// ── Todo View ─────────────────────────────────────────────────────────────────
+function TodoView({items,todos,onTodosChange}){
+  const [newText,setNewText]=useState("");
+  const ts=todayStr(),tt=todos.filter(t=>t.date===ts);
+  const urgent=items.filter(i=>!i.archived&&i.status!=="done"&&["urgent","high"].includes(i.priority));
+  function add(){if(!newText.trim())return;onTodosChange([...todos,{id:Date.now(),text:newText.trim(),done:false,date:ts}]);setNewText("");}
+  function toggle(id){onTodosChange(todos.map(t=>t.id===id?{...t,done:!t.done}:t));}
+  function del(id){onTodosChange(todos.filter(t=>t.id!==id));}
+  return(
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18,alignItems:"start"}}>
+      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"18px"}}>
+        <div style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:3}}>✅ Today's Quick Tasks</div>
+        <div style={{fontSize:11,color:C.text3,marginBottom:14}}>{new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}</div>
+        <div style={{display:"flex",gap:8,marginBottom:12}}>
+          <input value={newText} onChange={e=>setNewText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} placeholder="Add a quick task… (Enter)" style={{flex:1,background:C.cream,border:`1px solid ${C.border}`,borderRadius:8,padding:"8px 12px",color:C.text,fontSize:13,outline:"none"}}/>
+          <button onClick={add} style={{padding:"8px 14px",borderRadius:8,border:"none",background:C.accent,color:"#fff",fontSize:13,fontWeight:600}}>+</button>
+        </div>
+        {!tt.length&&<div style={{fontSize:13,color:C.text3,textAlign:"center",padding:"18px 0"}}>No tasks yet</div>}
+        {tt.map(t=>(
+          <div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 10px",borderRadius:8,marginBottom:4,background:t.done?C.cream:C.bg}}>
+            <button onClick={()=>toggle(t.id)} style={{width:18,height:18,borderRadius:5,border:`2px solid ${t.done?"#10b981":C.border2}`,background:t.done?"#10b981":"transparent",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#fff"}}>{t.done?"✓":""}</button>
+            <span style={{flex:1,fontSize:13,color:t.done?C.text3:C.text,textDecoration:t.done?"line-through":"none"}}>{t.text}</span>
+            <button onClick={()=>del(t.id)} style={{background:"transparent",border:"none",color:C.text3,fontSize:11}}>✕</button>
+          </div>
+        ))}
+        {tt.length>0&&<div style={{marginTop:8,fontSize:11,color:C.text3,textAlign:"right"}}>{tt.filter(t=>t.done).length}/{tt.length} done</div>}
+      </div>
+      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"18px"}}>
+        <div style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:3}}>🔥 Needs Attention</div>
+        <div style={{fontSize:11,color:C.text3,marginBottom:14}}>Urgent & High priority open items</div>
+        {!urgent.length&&<div style={{fontSize:13,color:C.text3,textAlign:"center",padding:"18px 0"}}>Nothing urgent 🎉</div>}
+        {urgent.map(item=>{const pri=getPri(item.priority),sec=getSec(item.section),od=isOverdue(item.due);return(
+          <div key={item.id} style={{padding:"9px 11px",borderRadius:9,marginBottom:5,background:C.bg,borderLeft:`3px solid ${pri.color}`}}>
+            <div style={{fontSize:12,fontWeight:600,color:C.text,marginBottom:3}}>{sec.icon} {item.title}</div>
+            {item.workstream&&<div style={{fontSize:10,color:C.text3,marginBottom:3}}>📁 {item.workstream}</div>}
+            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+              <Tag label={pri.label} color={pri.color}/>
+              {item.due&&<span style={{fontSize:10,color:od?"#ef4444":C.text3}}>{od?"⏰ ":""}{fmtDate(item.due)}</span>}
+            </div>
+          </div>
+        );})}
+      </div>
+    </div>
+  );
+}
+
+// ── Gantt View ────────────────────────────────────────────────────────────────
+function GanttView({items}){
+  const withDates=items.filter(i=>!i.archived&&i.due&&i.status!=="done");
+  const [offset,setOffset]=useState(0);
+  const COLS=28;
+  const startDate=useMemo(()=>{const d=new Date();d.setDate(d.getDate()-d.getDay()+offset*7);d.setHours(0,0,0,0);return d;},[offset]);
+  const days=useMemo(()=>Array.from({length:COLS},(_,i)=>{const d=new Date(startDate);d.setDate(d.getDate()+i);return d;}),[startDate]);
+  const todayD=useMemo(()=>{const d=new Date();d.setHours(0,0,0,0);return d;},[]);
+  function colIdx(ds){if(!ds)return -1;return Math.round((new Date(ds+"T00:00:00")-startDate)/86400000);}
+  // Mark DOE holidays on gantt
+  const holidayDates=new Set(DOE_HOLIDAYS_2025_26.map(h=>h.date));
+  return(
+    <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"18px",overflowX:"auto"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+        <div style={{fontSize:14,fontWeight:700,color:C.text}}>📊 Gantt — 4 Week Timeline</div>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={()=>setOffset(o=>o-1)} style={{padding:"5px 10px",borderRadius:7,border:`1px solid ${C.border}`,background:"transparent",color:C.text2,fontSize:12}}>← Prev</button>
+          <button onClick={()=>setOffset(0)} style={{padding:"5px 10px",borderRadius:7,border:`1px solid ${C.accent}`,background:C.accent+"15",color:C.accent,fontSize:12,fontWeight:600}}>Today</button>
+          <button onClick={()=>setOffset(o=>o+1)} style={{padding:"5px 10px",borderRadius:7,border:`1px solid ${C.border}`,background:"transparent",color:C.text2,fontSize:12}}>Next →</button>
+        </div>
+      </div>
+      <div style={{minWidth:700}}>
+        <div style={{display:"grid",gridTemplateColumns:`190px repeat(${COLS},1fr)`,marginBottom:3,borderBottom:`1px solid ${C.border}`,paddingBottom:3}}>
+          <div style={{fontSize:10,color:C.text3,fontWeight:700}}>ITEM</div>
+          {days.map((d,i)=>{
+            const ds=d.toISOString().split("T")[0],isT=d.getTime()===todayD.getTime(),isMon=d.getDay()===1||i===0,isHol=holidayDates.has(ds);
+            return<div key={i} style={{fontSize:9,color:isT?C.accent:isHol?"#10b981":isMon?C.text2:C.text3,fontWeight:isT?700:isMon||isHol?600:400,textAlign:"center",background:isT?C.accent+"12":isHol?"#d1fae544":"transparent",borderRadius:3,padding:"1px 0",title:isHol?DOE_HOLIDAYS_2025_26.find(h=>h.date===ds)?.label:""}}>
+              {(isMon||isT||isHol)?d.toLocaleDateString("en-US",{month:"short",day:"numeric"}):""}
+            </div>;
+          })}
+        </div>
+        {!withDates.length&&<div style={{fontSize:13,color:C.text3,padding:"28px 0",textAlign:"center"}}>No items with dates yet.</div>}
+        {withDates.map(item=>{
+          const sec=getSec(item.section),pri=getPri(item.priority),si=colIdx(item.startDate||item.due),ei=colIdx(item.due),od=isOverdue(item.due),barColor=od?"#ef4444":pri.color;
+          return(
+            <div key={item.id} style={{display:"grid",gridTemplateColumns:`190px repeat(${COLS},1fr)`,marginBottom:3,alignItems:"center"}}>
+              <div style={{fontSize:11,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",paddingRight:6,display:"flex",alignItems:"center",gap:4,minWidth:0}}>
+                <span style={{color:sec.color,flexShrink:0}}>{sec.icon}</span>
+                <span style={{overflow:"hidden",textOverflow:"ellipsis"}}>{item.title}</span>
+              </div>
+              {days.map((_,i)=>{
+                const isT=days[i].getTime()===todayD.getTime();
+                const inRange=i>=Math.max(0,si)&&i<=Math.min(COLS-1,ei);
+                const isStart=i===si&&si>=0&&si<COLS,isEnd=i===ei&&ei>=0&&ei<COLS,isDot=si===ei&&i===si&&si>=0&&si<COLS;
+                return(
+                  <div key={i} style={{height:24,position:"relative",display:"flex",alignItems:"center"}}>
+                    {isT&&<div style={{position:"absolute",top:0,bottom:0,left:"50%",width:1,background:C.accent+"55",pointerEvents:"none",zIndex:1}}/>}
+                    {inRange&&!isDot&&<div style={{position:"absolute",top:4,bottom:4,left:isStart?"3px":"0",right:isEnd?"3px":"0",background:barColor+"2e",borderRadius:`${isStart?5:0}px ${isEnd?5:0}px ${isEnd?5:0}px ${isStart?5:0}px`,border:`1px solid ${barColor}55`,borderLeft:isStart?`2px solid ${barColor}`:`1px solid ${barColor}22`,borderRight:isEnd?`2px solid ${barColor}`:`1px solid ${barColor}22`}}/>}
+                    {isDot&&<div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",width:9,height:9,borderRadius:"50%",background:barColor,border:`2px solid ${barColor}88`}}/>}
+                    {isEnd&&!isDot&&inRange&&<div style={{position:"absolute",right:3,top:"50%",transform:"translateY(-50%)",fontSize:8,color:barColor,fontWeight:700,whiteSpace:"nowrap",zIndex:2}}>{fmtDate(item.due)}</div>}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{marginTop:12,display:"flex",gap:12,flexWrap:"wrap",borderTop:`1px solid ${C.border}`,paddingTop:10}}>
+        <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:8,borderRadius:2,background:"#10b98130",border:"1px solid #10b98155"}}/><span style={{fontSize:10,color:C.text3}}>DOE holiday</span></div>
+        {PRIORITIES.map(p=><div key={p.id} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:12,height:7,borderRadius:2,background:p.color+"33",border:`1px solid ${p.color}55`}}/><span style={{fontSize:10,color:C.text3}}>{p.label}</span></div>)}
+      </div>
+    </div>
+  );
+}
+
+// ── Calendar View ─────────────────────────────────────────────────────────────
+function CalendarView({items,customDates,onEdit}){
+  const now=new Date();
+  const [year,setYear]=useState(now.getFullYear());
+  const [month,setMonth]=useState(now.getMonth());
+  const dIM=new Date(year,month+1,0).getDate(),fD=new Date(year,month,1).getDay(),ts=todayStr();
+  function prev(){if(month===0){setMonth(11);setYear(y=>y-1);}else setMonth(m=>m-1);}
+  function next(){if(month===11){setMonth(0);setYear(y=>y+1);}else setMonth(m=>m+1);}
+  const allDates=[...DOE_HOLIDAYS_2025_26,...(customDates||[])];
+  const byDate=useMemo(()=>{
+    const map={};
+    items.filter(i=>!i.archived&&i.due&&i.status!=="done").forEach(item=>{const d=new Date(item.due+"T00:00:00");if(d.getFullYear()===year&&d.getMonth()===month){const k=d.getDate();if(!map[k])map[k]={items:[],dates:[]};map[k].items.push(item);}});
+    allDates.filter(h=>{const d=new Date(h.date+"T00:00:00");return d.getFullYear()===year&&d.getMonth()===month;}).forEach(h=>{const k=new Date(h.date+"T00:00:00").getDate();if(!map[k])map[k]={items:[],dates:[]};map[k].dates.push(h);});
+    return map;
+  },[items,customDates,year,month]);
+  const cells=useMemo(()=>{const a=[];for(let i=0;i<fD;i++)a.push(null);for(let i=1;i<=dIM;i++)a.push(i);return a;},[fD,dIM]);
+  return(
+    <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"18px"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+        <div style={{fontSize:14,fontWeight:700,color:C.text}}>📅 {new Date(year,month,1).toLocaleDateString("en-US",{month:"long",year:"numeric"})}</div>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={prev} style={{padding:"5px 10px",borderRadius:7,border:`1px solid ${C.border}`,background:"transparent",color:C.text2,fontSize:12}}>← Prev</button>
+          <button onClick={()=>{setYear(now.getFullYear());setMonth(now.getMonth());}} style={{padding:"5px 10px",borderRadius:7,border:`1px solid ${C.accent}`,background:C.accent+"15",color:C.accent,fontSize:12,fontWeight:600}}>Today</button>
+          <button onClick={next} style={{padding:"5px 10px",borderRadius:7,border:`1px solid ${C.border}`,background:"transparent",color:C.text2,fontSize:12}}>Next →</button>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:1,marginBottom:3}}>
+        {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=><div key={d} style={{fontSize:10,color:C.text3,fontWeight:700,textAlign:"center",padding:"3px 0"}}>{d}</div>)}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
+        {cells.map((day,i)=>{
+          if(!day)return<div key={`e${i}`}/>;
+          const ds=`${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`,isT=ds===ts,cell=byDate[day]||{items:[],dates:[]};
+          const hasHol=cell.dates.length>0;
+          return(
+            <div key={day} style={{minHeight:70,background:isT?C.accent+"12":hasHol?"#f0fdf422":cell.items.length?C.cream:C.bg,borderRadius:7,border:`1px solid ${isT?C.accent:C.border}`,padding:"4px 5px"}}>
+              <div style={{fontSize:11,fontWeight:isT?700:400,color:isT?C.accent:C.text3,marginBottom:2}}>{day}</div>
+              {cell.dates.slice(0,1).map((h,i)=><div key={i} style={{fontSize:8,color:"#10b981",fontWeight:600,marginBottom:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>🏖 {h.label}</div>)}
+              {cell.items.slice(0,2).map(item=>{const pri=getPri(item.priority),sec=getSec(item.section);return(
+                <div key={item.id} onClick={()=>onEdit(item)} title={item.title} style={{fontSize:9,color:C.text,background:pri.color+"20",border:`1px solid ${pri.color}44`,borderRadius:3,padding:"1px 3px",marginBottom:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",cursor:"pointer"}}>
+                  {sec.icon} {item.title}
+                </div>
+              );})}
+              {cell.items.length>2&&<div style={{fontSize:8,color:C.text3}}>+{cell.items.length-2} more</div>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Dashboard View ────────────────────────────────────────────────────────────
+function DashboardView({items,todos}){
+  const ts=todayStr();
+  const active=items.filter(i=>!i.archived);
+  const done=active.filter(i=>i.status==="done").length,blocked=active.filter(i=>i.status==="blocked").length;
+  const overdue=active.filter(i=>i.status!=="done"&&isOverdue(i.due)).length,inprog=active.filter(i=>i.status==="inprogress").length;
+  const soon=active.filter(i=>i.status!=="done"&&isDueSoon(i.due)).length;
+  const tt=todos.filter(t=>t.date===ts),tdDone=tt.filter(t=>t.done).length;
+  const bySec=SECTIONS.filter(s=>s.id!=="all").map(sec=>({...sec,open:active.filter(i=>i.section===sec.id&&i.status!=="done").length,total:active.filter(i=>i.section===sec.id).length}));
+  const byWs=WORKSTREAMS.map(w=>({w,count:active.filter(i=>i.workstream===w&&i.status!=="done").length})).filter(x=>x.count>0).slice(0,6);
+  const Stat=({label,value,color,sub})=>(
+    <div style={{background:C.card,border:`1px solid ${C.border}`,borderLeft:`3px solid ${color}`,borderRadius:10,padding:"13px 15px"}}>
+      <div style={{fontSize:24,fontWeight:700,color}}>{value}</div>
+      <div style={{fontSize:12,color:C.text2,marginTop:2,fontWeight:600}}>{label}</div>
+      {sub&&<div style={{fontSize:10,color:C.text3,marginTop:1}}>{sub}</div>}
+    </div>
+  );
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:14}}>
+      <div style={{fontSize:14,fontWeight:700,color:C.text,fontFamily:"'Lora',serif"}}>Good {new Date().getHours()<12?"morning":"afternoon"}, Salma 👋</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:9}}>
+        <Stat label="Total Active" value={active.filter(i=>i.status!=="done").length} color={C.accent} sub={`${done} done`}/>
+        <Stat label="In Progress" value={inprog} color="#3b82f6" sub="active"/>
+        <Stat label="Blocked" value={blocked} color="#ef4444" sub="needs action"/>
+        <Stat label="Overdue" value={overdue} color="#f97316" sub="past due"/>
+        <Stat label="Due in 48h" value={soon} color="#f59e0b" sub="due soon"/>
+        <Stat label="Today Tasks" value={`${tdDone}/${tt.length}`} color="#10b981" sub="quick tasks"/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"15px 17px"}}>
+          <div style={{fontSize:12,fontWeight:700,color:C.text,marginBottom:12}}>Open by Section</div>
+          {bySec.map(sec=>(
+            <div key={sec.id} style={{marginBottom:9}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,color:sec.color,fontWeight:600}}>{sec.icon} {sec.label}</span><span style={{fontSize:12,color:C.text3}}>{sec.open}</span></div>
+              <div style={{height:5,background:C.bg,borderRadius:3}}><div style={{height:5,width:`${sec.total?Math.round(((sec.total-sec.open)/sec.total)*100):0}%`,background:sec.color,borderRadius:3,transition:"width 0.4s"}}/></div>
+            </div>
+          ))}
+        </div>
+        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"15px 17px"}}>
+          <div style={{fontSize:12,fontWeight:700,color:C.text,marginBottom:12}}>Open by Work Stream</div>
+          {!byWs.length&&<div style={{fontSize:12,color:C.text3}}>Add work streams to items to see chart</div>}
+          {byWs.map(({w,count})=>(
+            <div key={w} style={{display:"flex",alignItems:"center",gap:9,marginBottom:7}}>
+              <span style={{fontSize:11,color:C.text2,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>📁 {w}</span>
+              <div style={{width:50,height:5,background:C.bg,borderRadius:3}}><div style={{height:5,width:`${Math.min(100,count*20)}%`,background:C.accent,borderRadius:3}}/></div>
+              <span style={{fontSize:11,color:C.accent,fontWeight:700,width:14,textAlign:"right"}}>{count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Monitor View ──────────────────────────────────────────────────────────────
+function MonitorView({settings,onOpenSettings}){
+  const Board=({title,color,icon,links,emptyMsg})=>(
+    <div style={{background:C.card,border:`1px solid ${C.border}`,borderLeft:`3px solid ${color}`,borderRadius:12,padding:"15px 17px",marginBottom:11}}>
+      <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:9}}>{icon} {title}</div>
+      {!links.length?<div style={{fontSize:12,color:C.text3}}>{emptyMsg}</div>:
+        <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+          {links.map((l,i)=><a key={i} href={l.url} target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:6,padding:"7px 14px",borderRadius:8,border:`1px solid ${color}44`,background:color+"0e",color,fontSize:12,fontWeight:600}}>{l.name} ↗</a>)}
+        </div>}
+    </div>
+  );
+  return(
+    <div style={{maxWidth:700}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+        <div style={{fontSize:14,fontWeight:700,color:C.text}}>🔗 External Tools Monitor</div>
+        <button onClick={onOpenSettings} style={{padding:"6px 14px",borderRadius:8,border:`1px solid ${C.border}`,background:C.card,color:C.accent,fontSize:12,fontWeight:600}}>⚙ Configure</button>
+      </div>
+      <Board title="Jira Boards" color="#3b82f6" icon="⬡" links={(settings.jiraBoards||[]).map(b=>({name:b.name,url:`${b.base}/${b.prefix}`}))} emptyMsg="No Jira boards configured"/>
+      <Board title="Zendesk Queues" color="#10b981" icon="◈" links={(settings.zendeskBoards||[]).map(b=>({name:b.name,url:`${b.base}/agent`}))} emptyMsg="No Zendesk boards"/>
+      <Board title="Slack Channels" color="#f59e0b" icon="#" links={(settings.slackChannels||[]).map(c=>({name:c.name,url:c.workspace?`https://${c.workspace}.slack.com/app_redirect?channel=${c.channel}`:"#"}))} emptyMsg="No Slack channels"/>
+      <Board title="Microsoft Teams" color="#8b5cf6" icon="💬" links={(settings.teamsChannels||[]).map(c=>({name:c.name,url:c.url}))} emptyMsg="No Teams channels"/>
+      {settings.outlookEmail&&<div style={{background:C.card,border:`1px solid ${C.border}`,borderLeft:"3px solid #3b82f6",borderRadius:12,padding:"15px 17px"}}>
+        <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:9}}>📧 Outlook</div>
+        <a href={`mailto:${settings.outlookEmail}`} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"7px 14px",borderRadius:8,border:"1px solid #3b82f644",background:"#3b82f60e",color:"#3b82f6",fontSize:12,fontWeight:600}}>Compose Email ↗</a>
+      </div>}
+    </div>
+  );
+}
+
+// ── Settings Modal ────────────────────────────────────────────────────────────
+function SettingsModal({settings,onSave,onClose,items,todos}){
+  const [s,setS]=useState(JSON.parse(JSON.stringify(settings)));
+  const fileRef=useRef();
+  const addJira=()=>setS(v=>({...v,jiraBoards:[...v.jiraBoards,{id:Date.now(),name:"",base:"https://doeord.atlassian.net/browse",prefix:""}]}));
+  const updJira=(id,k,val)=>setS(v=>({...v,jiraBoards:v.jiraBoards.map(b=>b.id===id?{...b,[k]:val}:b)}));
+  const delJira=id=>setS(v=>({...v,jiraBoards:v.jiraBoards.filter(b=>b.id!==id)}));
+  const addZd=()=>setS(v=>({...v,zendeskBoards:[...v.zendeskBoards,{id:Date.now(),name:"",base:""}]}));
+  const updZd=(id,k,val)=>setS(v=>({...v,zendeskBoards:v.zendeskBoards.map(b=>b.id===id?{...b,[k]:val}:b)}));
+  const delZd=id=>setS(v=>({...v,zendeskBoards:v.zendeskBoards.filter(b=>b.id!==id)}));
+  const addSl=()=>setS(v=>({...v,slackChannels:[...v.slackChannels,{id:Date.now(),name:"",workspace:"",channel:""}]}));
+  const updSl=(id,k,val)=>setS(v=>({...v,slackChannels:v.slackChannels.map(c=>c.id===id?{...c,[k]:val}:c)}));
+  const delSl=id=>setS(v=>({...v,slackChannels:v.slackChannels.filter(c=>c.id!==id)}));
+  const addTm=()=>setS(v=>({...v,teamsChannels:[...v.teamsChannels,{id:Date.now(),name:"",url:""}]}));
+  const updTm=(id,k,val)=>setS(v=>({...v,teamsChannels:v.teamsChannels.map(c=>c.id===id?{...c,[k]:val}:c)}));
+  const delTm=id=>setS(v=>({...v,teamsChannels:v.teamsChannels.filter(c=>c.id!==id)}));
+  function exportData(){const blob=new Blob([JSON.stringify({items,todos,settings:s,exportedAt:new Date().toISOString()},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`osp-central-${todayStr()}.json`;a.click();}
+  function importFile(file){const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(d.items){lsSet("osp-items",d.items);lsSet("osp-todos",d.todos||[]);lsSet("osp-settings",d.settings||{});alert("✅ Restored! Refresh the page.");}}catch{alert("Invalid file.");}};r.readAsText(file);}
+  const inp=extra=>({width:"100%",background:C.cream,border:`1px solid ${C.border}`,borderRadius:7,padding:"7px 10px",color:C.text,fontSize:12,outline:"none",...extra});
+  const row={display:"flex",gap:8,alignItems:"center",marginBottom:7};
+  const H=({t,color,onAdd,lbl})=>(<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8,marginTop:4}}><div style={{fontSize:11,fontWeight:700,color,letterSpacing:"0.05em"}}>{t}</div>{onAdd&&<button onClick={onAdd} style={{padding:"3px 10px",borderRadius:6,border:`1px solid ${color}`,background:color+"15",color,fontSize:11,fontWeight:600}}>+ {lbl}</button>}</div>);
+  return(
+    <div style={{position:"fixed",inset:0,background:"#00000040",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,padding:20}}>
+      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:24,width:"100%",maxWidth:540,maxHeight:"92vh",overflowY:"auto"}}>
+        <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:3}}>⚙ Settings & Integrations</div>
+        <div style={{fontSize:12,color:C.text3,marginBottom:16}}>Configure your boards, channels, and tools.</div>
+        <H t="🔵 JIRA BOARDS" color="#3b82f6" onAdd={addJira} lbl="Add"/>
+        {s.jiraBoards.map(b=>(<div key={b.id} style={row}><input value={b.name} onChange={e=>updJira(b.id,"name",e.target.value)} placeholder="Name" style={inp({flex:"0 0 80px"})}/><input value={b.prefix} onChange={e=>updJira(b.id,"prefix",e.target.value)} placeholder="Prefix" style={inp({flex:"0 0 90px",fontFamily:"'DM Mono',monospace"})}/><input value={b.base} onChange={e=>updJira(b.id,"base",e.target.value)} placeholder="Base URL" style={inp({flex:1})}/><button onClick={()=>delJira(b.id)} style={{background:"transparent",border:"none",color:"#ef4444",fontSize:14}}>✕</button></div>))}
+        <div style={{borderTop:`1px solid ${C.border}`,marginTop:10,paddingTop:10}}><H t="🟢 ZENDESK" color="#10b981" onAdd={addZd} lbl="Add"/>{s.zendeskBoards.map(b=>(<div key={b.id} style={row}><input value={b.name} onChange={e=>updZd(b.id,"name",e.target.value)} placeholder="Name" style={inp({flex:"0 0 130px"})}/><input value={b.base} onChange={e=>updZd(b.id,"base",e.target.value)} placeholder="https://yourorg.zendesk.com" style={inp({flex:1})}/><button onClick={()=>delZd(b.id)} style={{background:"transparent",border:"none",color:"#ef4444",fontSize:14}}>✕</button></div>))}</div>
+        <div style={{borderTop:`1px solid ${C.border}`,marginTop:10,paddingTop:10}}><H t="🟡 SLACK" color="#f59e0b" onAdd={addSl} lbl="Add"/>{s.slackChannels.map(c=>(<div key={c.id} style={row}><input value={c.name} onChange={e=>updSl(c.id,"name",e.target.value)} placeholder="#channel" style={inp({flex:"0 0 100px"})}/><input value={c.workspace} onChange={e=>updSl(c.id,"workspace",e.target.value)} placeholder="workspace" style={inp({flex:1})}/><input value={c.channel} onChange={e=>updSl(c.id,"channel",e.target.value)} placeholder="channel-id" style={inp({flex:"0 0 100px"})}/><button onClick={()=>delSl(c.id)} style={{background:"transparent",border:"none",color:"#ef4444",fontSize:14}}>✕</button></div>))}</div>
+        <div style={{borderTop:`1px solid ${C.border}`,marginTop:10,paddingTop:10}}><H t="💜 TEAMS" color="#8b5cf6" onAdd={addTm} lbl="Add"/>{s.teamsChannels.map(c=>(<div key={c.id} style={row}><input value={c.name} onChange={e=>updTm(c.id,"name",e.target.value)} placeholder="Name" style={inp({flex:"0 0 140px"})}/><input value={c.url} onChange={e=>updTm(c.id,"url",e.target.value)} placeholder="Teams URL" style={inp({flex:1})}/><button onClick={()=>delTm(c.id)} style={{background:"transparent",border:"none",color:"#ef4444",fontSize:14}}>✕</button></div>))}</div>
+        <div style={{borderTop:`1px solid ${C.border}`,marginTop:10,paddingTop:10}}><H t="📧 OUTLOOK" color="#3b82f6"/><input value={s.outlookEmail||""} onChange={e=>setS(v=>({...v,outlookEmail:e.target.value}))} placeholder="your@email.gov" style={inp({})}/></div>
+        <div style={{borderTop:`1px solid ${C.border}`,marginTop:14,paddingTop:12,marginBottom:14}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.text2,marginBottom:8}}>💾 BACKUP & RESTORE</div>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={exportData} style={{flex:1,padding:"8px",borderRadius:8,border:`1px solid ${C.border}`,background:C.cream,color:"#3b82f6",fontSize:12,fontWeight:600}}>⬇ Export .json</button>
+            <button onClick={()=>fileRef.current.click()} style={{flex:1,padding:"8px",borderRadius:8,border:`1px solid ${C.border}`,background:C.cream,color:"#10b981",fontSize:12,fontWeight:600}}>⬆ Import .json</button>
+            <input ref={fileRef} type="file" accept=".json" style={{display:"none"}} onChange={e=>{if(e.target.files[0])importFile(e.target.files[0]);}}/>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:10}}>
+          <button onClick={onClose} style={{flex:1,padding:"10px",borderRadius:8,border:`1px solid ${C.border}`,background:"transparent",color:C.text2,fontSize:13}}>Cancel</button>
+          <button onClick={()=>{onSave(s);onClose();}} style={{flex:2,padding:"10px",borderRadius:8,border:"none",background:C.accent,color:"#fff",fontSize:13,fontWeight:600}}>Save Settings</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Edit Modal ────────────────────────────────────────────────────────────────
+function ItemEditModal({item,onSave,onClose,allItems}){
+  const [e,setE]=useState({...item});
+  const [linkSearch,setLinkSearch]=useState("");
+  const [showLink,setShowLink]=useState(false);
+  const linkedObjs=(e.linkedItems||[]).map(id=>allItems.find(i=>i.id===id)).filter(Boolean);
+  const linkable=allItems.filter(i=>i.id!==e.id&&!(e.linkedItems||[]).includes(i.id)&&(linkSearch===""||i.title.toLowerCase().includes(linkSearch.toLowerCase())));
+  const inpF=(key,ph,label,extra={})=>(<div><label style={LABEL}>{label}</label><input value={e[key]||""} onChange={ev=>setE(i=>({...i,[key]:ev.target.value}))} placeholder={ph} list={key==="owner"?"team-list":key==="workstream"?"ws-list":undefined} style={mkInp(extra)}/></div>);
+  const selF=(key,opts,label)=>(<div><label style={LABEL}>{label}</label><select value={e[key]||""} onChange={ev=>setE(i=>({...i,[key]:ev.target.value}))} style={mkInp()}>{opts.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}</select></div>);
+  return(
+    <div style={{position:"fixed",inset:0,background:"#00000040",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}>
+      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:24,width:"100%",maxWidth:560,maxHeight:"92vh",overflowY:"auto"}}>
+        <TeamDatalist/><WorkstreamDatalist/>
+        <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:14}}>Edit Item</div>
+        <div style={{display:"flex",flexDirection:"column",gap:9}}>
+          {inpF("title","Title…","TITLE")}
+          {e.attendees!==undefined&&inpF("attendees","Attendees…","ATTENDEES")}
+          {inpF("workstream","Work stream…","WORK STREAM")}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>{selF("section",SECTIONS.filter(s=>s.id!=="all"),"SECTION")}{selF("priority",PRIORITIES,"PRIORITY")}</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>{selF("status",STATUSES,"STATUS")}{inpF("owner","Salma…","OWNER")}</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:9}}>
+            <div><label style={LABEL}>START</label><input type="date" value={e.startDate||""} onChange={ev=>setE(i=>({...i,startDate:ev.target.value}))} style={mkInp()}/></div>
+            <div><label style={LABEL}>DUE</label><input type="date" value={e.due||""} onChange={ev=>setE(i=>({...i,due:ev.target.value}))} style={mkInp()}/></div>
+            {inpF("jira","TDPGM-9217","JIRA",{fontFamily:"'DM Mono',monospace"})}
+          </div>
+          <div style={{background:C.cream,border:`1px solid ${C.border}`,borderRadius:9,padding:10}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}><span style={LABEL}>🔗 LINKED</span><button onClick={()=>setShowLink(p=>!p)} style={{fontSize:11,color:C.accent,background:"transparent",border:`1px solid ${C.accent}`,borderRadius:6,padding:"2px 8px",fontWeight:600}}>+ Link</button></div>
+            {linkedObjs.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:7}}>{linkedObjs.map(li=>(<div key={li.id} style={{display:"flex",alignItems:"center",gap:4,background:C.card,border:`1px solid ${C.border}`,borderRadius:6,padding:"3px 8px",fontSize:11}}><span style={{color:getSec(li.section).color}}>{getSec(li.section).icon}</span><span style={{color:C.text,maxWidth:150,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{li.title}</span><button onClick={()=>setE(i=>({...i,linkedItems:(i.linkedItems||[]).filter(id=>id!==li.id)}))} style={{background:"transparent",border:"none",color:C.text3,fontSize:10}}>✕</button></div>))}</div>}
+            {showLink&&<><input value={linkSearch} onChange={ev=>setLinkSearch(ev.target.value)} placeholder="Search…" style={{width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:7,padding:"6px 10px",color:C.text,fontSize:12,outline:"none",marginBottom:5}}/><div style={{maxHeight:110,overflowY:"auto"}}>{linkable.slice(0,15).map(li=>(<div key={li.id} onClick={()=>{setE(i=>({...i,linkedItems:[...(i.linkedItems||[]),li.id]}));setShowLink(false);setLinkSearch("");}} style={{padding:"5px 8px",borderRadius:6,cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontSize:11}} onMouseEnter={e=>e.currentTarget.style.background=C.bg} onMouseLeave={e=>e.currentTarget.style.background="transparent"}><span style={{color:getSec(li.section).color}}>{getSec(li.section).icon}</span><span style={{color:C.text,flex:1}}>{li.title}</span><Tag label={getSta(li.status).label} color={getSta(li.status).dot}/></div>))}</div></>}
+          </div>
+          {TEMPLATE_FIELDS.map(f=>(<div key={f.key}><label style={LABEL}>{f.icon} {f.label.toUpperCase()}</label><textarea value={e[f.key]||""} onChange={ev=>setE(i=>({...i,[f.key]:ev.target.value}))} rows={2} placeholder={f.ph} style={{width:"100%",background:C.cream,border:`1px solid ${C.border}`,borderRadius:7,padding:"7px 10px",color:C.text,fontSize:12,outline:"none",resize:"vertical"}}/></div>))}
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div onClick={()=>setE(i=>({...i,carryOver:!i.carryOver}))} style={{width:32,height:17,borderRadius:9,background:e.carryOver?C.accent:C.border,position:"relative",transition:"background 0.2s",cursor:"pointer",flexShrink:0}}><div style={{width:11,height:11,borderRadius:"50%",background:"#fff",position:"absolute",top:3,left:e.carryOver?17:2,transition:"left 0.2s"}}/></div>
+            <span style={{fontSize:12,color:C.text2}}>Carry over until done</span>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:9,marginTop:16}}>
+          <button onClick={onClose} style={{flex:1,padding:"10px",borderRadius:8,border:`1px solid ${C.border}`,background:"transparent",color:C.text2,fontSize:13}}>Cancel</button>
+          <button onClick={()=>{if(e.title?.trim())onSave(e);}} style={{flex:2,padding:"10px",borderRadius:8,border:"none",background:C.accent,color:"#fff",fontSize:13,fontWeight:600}}>Save Changes</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main App ──────────────────────────────────────────────────────────────────
+function App(){
+  const [items,      setItemsRaw]      = useState(()=>lsGet("osp-items",   SAMPLE_ITEMS));
+  const [todos,      setTodosRaw]      = useState(()=>lsGet("osp-todos",   SAMPLE_TODOS));
+  const [settings,   setSettingsRaw]   = useState(()=>lsGet("osp-settings",DEFAULT_SETTINGS));
+  const [customDates,setCustomDatesRaw]= useState(()=>lsGet("osp-dates",   []));
+  const [activeView, setActiveView]    = useState("prep");
+  const [activeSection,setActiveSection]=useState("all");
+  const [filterPri,  setFilterPri]     = useState("all");
+  const [filterSta,  setFilterSta]     = useState("all");
+  const [showEdit,   setShowEdit]      = useState(false);
+  const [showSettings,setShowSettings] = useState(false);
+  const [editItem,   setEditItem]      = useState(null);
+  const [search,     setSearch]        = useState("");
+  const [sidebarOpen,setSidebarOpen]   = useState(true);
+  const [showDone,   setShowDone]      = useState(false);
+  const [flash,      setFlash]         = useState(false);
+
+  function setItems(v){setItemsRaw(v);lsSet("osp-items",v);pulse();}
+  function setTodos(v){setTodosRaw(v);lsSet("osp-todos",v);pulse();}
+  function setSettings(v){setSettingsRaw(v);lsSet("osp-settings",v);pulse();}
+  function setCustomDates(v){setCustomDatesRaw(v);lsSet("osp-dates",v);pulse();}
+  function pulse(){setFlash(true);setTimeout(()=>setFlash(false),1400);}
+
+  // Update tab title with urgent count
+  useEffect(()=>{
+    const urgent=items.filter(i=>!i.archived&&i.status!=="done"&&i.priority==="urgent").length;
+    const overdue=items.filter(i=>!i.archived&&i.status!=="done"&&isOverdue(i.due)).length;
+    const total=urgent+overdue;
+    document.title=total>0?`(${total}) OSP Central — Salma`:"OSP Central — Salma";
+  },[items]);
+
+  const activeItems=items.filter(i=>!i.archived);
+  const filteredItems=useMemo(()=>activeItems.filter(item=>{
+    if(!showDone&&item.status==="done")return false;
+    if(activeSection!=="all"&&item.section!==activeSection)return false;
+    if(filterPri!=="all"&&item.priority!==filterPri)return false;
+    if(filterSta!=="all"&&item.status!==filterSta)return false;
+    if(search){const q=search.toLowerCase();return item.title.toLowerCase().includes(q)||(item.agenda||"").toLowerCase().includes(q)||(item.jira||"").toLowerCase().includes(q)||(item.workstream||"").toLowerCase().includes(q);}
+    return true;
+  }),[activeItems,showDone,activeSection,filterPri,filterSta,search]);
+
+  const sortedItems=useMemo(()=>[...filteredItems].sort((a,b)=>{
+    const pO={urgent:0,high:1,normal:2,low:3},sO={blocked:0,pending:1,inprogress:2,done:3};
+    if(pO[a.priority]!==pO[b.priority])return pO[a.priority]-pO[b.priority];
+    return sO[a.status]-sO[b.status];
+  }),[filteredItems]);
+
+  function openEdit(item){setEditItem(item);setShowEdit(true);}
+  function saveEdit(e){setItems(items.map(i=>i.id===e.id?e:i));setShowEdit(false);}
+  function deleteItem(id){setItems(items.filter(i=>i.id!==id));}
+  function archiveItem(id){setItems(items.map(i=>i.id===id?{...i,archived:true}:i));}
+  function unarchiveItem(id){setItems(items.map(i=>i.id===id?{...i,archived:false}:i));}
+  function cycleStatus(item){const idx=STATUSES.findIndex(s=>s.id===item.status);setItems(items.map(i=>i.id===item.id?{...i,status:STATUSES[(idx+1)%STATUSES.length].id}:i));}
+  function saveCheckin(item){setItems([item,...items]);}
+  function addItems(newItems){setItems([...newItems,...items]);}
+
+  const secCount=sid=>activeItems.filter(i=>(sid==="all"||i.section===sid)&&i.status!=="done").length;
+  const urgCount=sid=>activeItems.filter(i=>(sid==="all"||i.section===sid)&&i.status!=="done"&&["urgent","high"].includes(i.priority)).length;
+  const blockedN=activeItems.filter(i=>i.status==="blocked").length;
+  const overdueN=activeItems.filter(i=>i.status!=="done"&&isOverdue(i.due)).length;
+
+  return(
+    <div style={{display:"flex",height:"100vh",background:C.bg,color:C.text,overflow:"hidden",position:"relative",flexDirection:"column"}}>
+      {flash&&<div style={{position:"fixed",bottom:16,right:16,background:"#ecfdf5",border:"1px solid #6ee7b7",borderRadius:8,padding:"6px 14px",fontSize:11,color:"#059669",fontWeight:600,zIndex:999,pointerEvents:"none",boxShadow:"0 2px 8px #0001"}}>💾 Saved</div>}
+
+      <div style={{display:"flex",flex:1,overflow:"hidden"}}>
+        {/* ── SIDEBAR ── */}
+        <div style={{width:sidebarOpen?255:58,background:C.sidebar,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",transition:"width 0.2s",flexShrink:0,overflow:"hidden"}}>
+          <div style={{padding:"15px 12px 12px",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:9}}>
+            <div style={{width:30,height:30,background:`linear-gradient(135deg,${C.accent},#8b5cf6)`,borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0,color:"#fff"}}>⬡</div>
+            {sidebarOpen&&<div><div style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Lora',serif"}}>OSP Central</div><div style={{fontSize:10,color:C.text3}}>Salma's Daily Check-In</div></div>}
+          </div>
+
+          {sidebarOpen&&(blockedN>0||overdueN>0)&&(
+            <div style={{margin:"8px 9px 0",background:"#fef2f2",border:"1px solid #fca5a5",borderRadius:7,padding:"7px 9px"}}>
+              {blockedN>0&&<div style={{fontSize:11,color:"#ef4444",fontWeight:600}}>⚠ {blockedN} blocked</div>}
+              {overdueN>0&&<div style={{fontSize:11,color:"#f97316",fontWeight:600,marginTop:2}}>⏰ {overdueN} overdue</div>}
+            </div>
+          )}
+
+          <div style={{padding:"9px 7px 3px"}}>
+            {sidebarOpen&&<div style={{fontSize:10,color:C.text3,fontWeight:700,letterSpacing:"0.08em",padding:"3px 9px 5px"}}>SECTIONS</div>}
+            {SECTIONS.map(sec=>{const active=activeSection===sec.id;return(
+              <button key={sec.id} onClick={()=>setActiveSection(sec.id)} style={{width:"100%",display:"flex",alignItems:"center",gap:9,padding:"7px 9px",borderRadius:7,border:"none",background:active?sec.color+"18":"transparent",color:active?sec.color:C.text2,marginBottom:1,transition:"all 0.15s"}}>
+                <span style={{fontSize:14,flexShrink:0}}>{sec.icon}</span>
+                {sidebarOpen&&<><span style={{fontSize:12,fontWeight:active?600:400,flex:1,textAlign:"left",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{sec.label}</span>
+                <div style={{display:"flex",gap:3}}>{urgCount(sec.id)>0&&<span style={{background:"#fee2e2",color:"#ef4444",fontSize:9,fontWeight:700,padding:"1px 4px",borderRadius:10}}>{urgCount(sec.id)}</span>}{secCount(sec.id)>0&&<span style={{background:sec.color+"18",color:sec.color,fontSize:9,fontWeight:600,padding:"1px 4px",borderRadius:10}}>{secCount(sec.id)}</span>}</div></>}
+              </button>
+            );})}
+          </div>
+
+          <div style={{padding:"3px 7px",borderTop:`1px solid ${C.border}44`}}>
+            {sidebarOpen&&<div style={{fontSize:10,color:C.text3,fontWeight:700,letterSpacing:"0.08em",padding:"7px 9px 5px"}}>VIEWS</div>}
+            {VIEWS.map(v=>{const active=activeView===v.id;return(
+              <button key={v.id} onClick={()=>setActiveView(v.id)} style={{width:"100%",display:"flex",alignItems:"center",gap:9,padding:"6px 9px",borderRadius:7,border:"none",background:active?C.accent+"18":"transparent",color:active?C.accent:C.text2,marginBottom:1,transition:"all 0.15s"}}>
+                <span style={{fontSize:12,flexShrink:0}}>{v.icon}</span>
+                {sidebarOpen&&<span style={{fontSize:11,fontWeight:active?600:400}}>{v.label}</span>}
+              </button>
+            );})}
+          </div>
+
+          <div style={{flex:1}}/>
+          <div style={{padding:"7px",borderTop:`1px solid ${C.border}`}}>
+            <button onClick={()=>setShowSettings(true)} style={{width:"100%",padding:"6px 9px",borderRadius:7,border:`1px solid ${C.border}`,background:"transparent",color:C.accent,fontSize:11,fontWeight:600,display:"flex",alignItems:"center",gap:7,marginBottom:3}}>
+              <span>⚙</span>{sidebarOpen&&"Settings & Integrations"}
+            </button>
+            <button onClick={()=>setSidebarOpen(o=>!o)} style={{width:"100%",padding:"5px 9px",borderRadius:7,border:"none",background:"transparent",color:C.text3,fontSize:11,display:"flex",alignItems:"center",gap:7}}>
+              <span>{sidebarOpen?"◀":"▶"}</span>{sidebarOpen&&"Collapse"}
+            </button>
+          </div>
+        </div>
+
+        {/* ── MAIN ── */}
+        <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+          {/* Due soon banner */}
+          <DueSoonBanner items={activeItems}/>
+
+          {/* Topbar */}
+          <div style={{padding:"10px 18px",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:8,background:C.card,flexShrink:0,flexWrap:"wrap"}}>
+            <div style={{flex:1,minWidth:100}}>
+              <div style={{fontSize:14,fontWeight:700,color:C.text}}>{VIEWS.find(v=>v.id===activeView)?.icon} {VIEWS.find(v=>v.id===activeView)?.label}{activeSection!=="all"&&<span style={{fontSize:11,color:getSec(activeSection).color,marginLeft:7,fontWeight:500}}>· {getSec(activeSection).label}</span>}</div>
+              <div style={{fontSize:10,color:C.text3,marginTop:1}}>{new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"})}</div>
+            </div>
+            {activeView==="cards"&&<>
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search…" style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 11px",color:C.text,fontSize:12,width:150,outline:"none"}}/>
+              <select value={filterPri} onChange={e=>setFilterPri(e.target.value)} style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,padding:"5px 8px",color:C.text,fontSize:12,outline:"none"}}>
+                <option value="all">All Priorities</option>{PRIORITIES.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}
+              </select>
+              <select value={filterSta} onChange={e=>setFilterSta(e.target.value)} style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,padding:"5px 8px",color:C.text,fontSize:12,outline:"none"}}>
+                <option value="all">All Statuses</option>{STATUSES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
+              </select>
+              <button onClick={()=>setShowDone(d=>!d)} style={{padding:"5px 10px",borderRadius:8,border:`1px solid ${C.border}`,background:showDone?C.accent+"18":"transparent",color:showDone?C.accent:C.text2,fontSize:12}}>{showDone?"✓ Done":"Show Done"}</button>
+            </>}
+          </div>
+
+          <div style={{flex:1,overflowY:"auto",padding:"15px 17px"}}>
+            {activeView==="prep"     &&<MeetingPrepView  items={activeItems} onEdit={openEdit}/>}
+            {activeView==="notes"    &&<NotePage         section={activeSection} items={activeItems} settings={settings} onSaveCheckin={saveCheckin} onEdit={openEdit} onAddItems={addItems}/>}
+            {activeView==="cards"    &&<CardsView        items={sortedItems} settings={settings} onEdit={openEdit} onDelete={deleteItem} onCycleStatus={cycleStatus} allItems={activeItems} onArchive={archiveItem}/>}
+            {activeView==="search"   &&<SearchView       items={items} todos={todos} onEdit={openEdit} settings={settings}/>}
+            {activeView==="history"  &&<HistoryView      items={activeItems} onEdit={openEdit} settings={settings}/>}
+            {activeView==="archive"  &&<ArchiveView      items={items} onUnarchive={unarchiveItem} onDelete={deleteItem} settings={settings}/>}
+            {activeView==="todo"     &&<TodoView         items={activeItems} todos={todos} onTodosChange={setTodos}/>}
+            {activeView==="dates"    &&<KeyDatesView     customDates={customDates} onCustomDatesChange={setCustomDates}/>}
+            {activeView==="gantt"    &&<GanttView        items={activeItems.filter(i=>activeSection==="all"||i.section===activeSection)}/>}
+            {activeView==="calendar" &&<CalendarView     items={activeItems.filter(i=>activeSection==="all"||i.section===activeSection)} customDates={customDates} onEdit={openEdit}/>}
+            {activeView==="dashboard"&&<DashboardView    items={activeItems} todos={todos}/>}
+            {activeView==="monitor"  &&<MonitorView      settings={settings} onOpenSettings={()=>setShowSettings(true)}/>}
+          </div>
+        </div>
+      </div>
+
+      {showEdit    &&editItem&&<ItemEditModal item={editItem} onSave={saveEdit} onClose={()=>setShowEdit(false)} allItems={activeItems}/>}
+      {showSettings&&<SettingsModal settings={settings} onSave={setSettings} onClose={()=>setShowSettings(false)} items={items} todos={todos}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
