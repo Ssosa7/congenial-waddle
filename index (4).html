@@ -1,0 +1,1256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Daily Hub</title>
+  <style>
+    :root{
+      /* calm + grown, but still cute */
+      --bg: #f6f7f8;
+      --panel: #ffffff;
+      --panel-2: #fbfbfc;
+      --text: #14181f;
+      --muted: #5b6778;
+      --border: rgba(15, 23, 42, .12);
+      --shadow: 0 10px 30px rgba(17, 24, 39, .10);
+      --radius: 18px;
+
+      /* fall-ish accents (not beige wallpaper vibes) */
+      --accent: #9a5b43;   /* clay */
+      --accent-2:#6b7d4e;  /* olive */
+      --accent-3:#2f4858;  /* deep teal */
+      --accent-4:#7a5c8a;  /* plum */
+
+      --focus: rgba(154, 91, 67, .25);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 700px at 12% 10%, rgba(154,91,67,.10), transparent 55%),
+                  radial-gradient(900px 600px at 88% 8%, rgba(107,125,78,.10), transparent 52%),
+                  radial-gradient(1200px 800px at 50% 110%, rgba(47,72,88,.08), transparent 60%),
+                  var(--bg);
+      color: var(--text);
+    }
+
+    a{ color:inherit; }
+    button, input, select, textarea{ font: inherit; }
+    .app{ height:100%; display:flex; }
+    .sidebar{
+      width: 280px;
+      padding: 18px 16px;
+      border-right: 1px solid var(--border);
+      background: rgba(255,255,255,.70);
+      backdrop-filter: blur(10px);
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      padding: 10px 10px 16px 10px;
+    }
+    .logo{
+      width:36px; height:36px; border-radius: 12px;
+      background: linear-gradient(135deg, rgba(154,91,67,1), rgba(47,72,88,1));
+      box-shadow: 0 10px 18px rgba(0,0,0,.15);
+    }
+    .brand h1{
+      font-size: 16px; margin:0;
+      letter-spacing:.2px;
+    }
+    .brand p{ margin:2px 0 0 0; font-size:12px; color: var(--muted); }
+
+    .nav{ margin-top: 8px; display:flex; flex-direction:column; gap:6px; }
+    .nav button{
+      width:100%;
+      text-align:left;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .nav button:hover{ background: rgba(255,255,255,.60); border-color: var(--border); }
+    .nav button.active{
+      background: rgba(255,255,255,.95);
+      border-color: rgba(154,91,67,.35);
+      box-shadow: 0 6px 18px rgba(154,91,67,.10);
+    }
+    .nav small{ color: var(--muted); font-weight:600; }
+
+    .sidebar .footer{
+      margin-top:auto;
+      padding: 12px 10px 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .main{
+      flex:1;
+      padding: 18px;
+      overflow:auto;
+    }
+
+    .topbar{
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      margin-bottom: 14px;
+    }
+    .topbar h2{ margin:0; font-size:18px; }
+    .topbar .actions{ display:flex; gap:8px; align-items:center; }
+    .chip{
+      padding: 8px 10px;
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      display:flex; gap:8px; align-items:center;
+    }
+    .btn{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.92);
+      cursor:pointer;
+      box-shadow: 0 8px 18px rgba(0,0,0,.06);
+    }
+    .btn:hover{ transform: translateY(-1px); }
+    .btn.primary{
+      border-color: rgba(154,91,67,.55);
+      background: linear-gradient(180deg, rgba(154,91,67,.16), rgba(255,255,255,.90));
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.25fr .85fr;
+      gap: 14px;
+    }
+    @media (max-width: 1100px){
+      .sidebar{ width: 240px; }
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding: 14px 14px 10px 14px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      border-bottom: 1px solid rgba(15,23,42,.06);
+      background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,.85));
+    }
+    .card .hd h3{ margin:0; font-size: 14px; letter-spacing:.2px; }
+    .card .bd{ padding: 14px; }
+
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 720px){
+      .kpis{ grid-template-columns: 1fr; }
+    }
+    .kpi{
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(251,251,252,.85);
+    }
+    .kpi .label{ color: var(--muted); font-size: 12px; }
+    .kpi .value{ margin-top: 6px; font-size: 18px; font-weight: 750; }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(15,23,42,.12);
+      background: rgba(255,255,255,.75);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .dot{ width:10px; height:10px; border-radius: 999px; display:inline-block; background: var(--accent); }
+
+    .list{ display:flex; flex-direction:column; gap:8px; }
+    .row{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(255,255,255,.65);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+    }
+    .row .title{ font-weight: 700; }
+    .row .meta{ color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .row .right{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+    .tag{
+      padding: 6px 10px; border-radius: 999px;
+      border: 1px solid rgba(15,23,42,.12);
+      background: rgba(255,255,255,.85);
+      font-size: 12px; color: var(--muted);
+      display:inline-flex; align-items:center; gap:8px;
+      white-space:nowrap;
+    }
+
+    /* Calendar */
+    .cal{
+      display:flex; flex-direction:column; gap: 10px;
+    }
+    .calbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .calbar .left{ display:flex; gap:8px; align-items:center; }
+    .calbar h4{ margin:0; font-size: 14px; }
+    .calgrid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+    .dow{ color: var(--muted); font-size: 11px; padding: 2px 2px 6px 2px; }
+    .day{
+      min-height: 78px;
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(255,255,255,.72);
+      padding: 8px;
+      display:flex; flex-direction:column; gap:6px;
+      cursor:pointer;
+    }
+    .day:hover{ box-shadow: 0 10px 24px rgba(0,0,0,.08); transform: translateY(-1px); }
+    .day.muted{ opacity:.45; }
+    .day .num{ font-weight: 800; font-size: 12px; color: var(--muted); }
+    .bars{ display:flex; flex-direction:column; gap:4px; }
+    .bar{
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(154,91,67,.25);
+      border: 1px solid rgba(154,91,67,.25);
+    }
+
+    /* Forms */
+    .form{
+      display:grid; gap:10px;
+    }
+    .field{ display:grid; gap:6px; }
+    .field label{ font-size:12px; color: var(--muted); font-weight: 700; }
+    .field input, .field select, .field textarea{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.92);
+      outline: none;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus{
+      box-shadow: 0 0 0 4px var(--focus);
+      border-color: rgba(154,91,67,.55);
+    }
+    textarea{ min-height: 90px; resize: vertical; }
+
+    /* Modal */
+    .overlay{
+      position:fixed; inset:0;
+      background: rgba(17,24,39,.42);
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      padding: 18px;
+      z-index: 999;
+    }
+    .overlay.open{ display:flex; }
+    .modal{
+      width: min(920px, 100%);
+      border-radius: 22px;
+      background: rgba(255,255,255,.96);
+      border: 1px solid rgba(255,255,255,.35);
+      box-shadow: 0 30px 80px rgba(0,0,0,.35);
+      overflow:hidden;
+      max-height: 90vh;
+      display:flex;
+      flex-direction:column;
+    }
+    .modal .mh{
+      padding: 14px 14px 10px 14px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      border-bottom: 1px solid rgba(15,23,42,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,.85));
+    }
+    .modal .mh h3{ margin:0; font-size: 14px; }
+    .modal .mh .x{ border:none; background:transparent; cursor:pointer; font-size: 18px; padding: 6px 10px; border-radius: 12px; }
+    .modal .mh .x:hover{ background: rgba(15,23,42,.06); }
+    .modal .mb{ padding: 14px; overflow:auto; }
+
+    .two{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 900px){
+      .two{ grid-template-columns: 1fr; }
+    }
+
+    /* Tiny helpers */
+    .muted{ color: var(--muted); }
+    .spacer{ height: 6px; }
+    .danger{ color:#b42318; font-weight: 700; }
+    .hint{ font-size: 12px; color: var(--muted); line-height:1.35; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Daily Hub</h1>
+          <p>OSP brain organizer (respectfully)</p>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Primary">
+        <button class="active" data-view="dashboard"><span>Dashboard</span><small>⌘1</small></button>
+        <button data-view="calendar"><span>Calendar</span><small>⌘2</small></button>
+        <button data-view="workstreams"><span>Workstreams</span><small>⌘3</small></button>
+        <button data-view="notes"><span>Notes</span><small>⌘4</small></button>
+        <button data-view="settings"><span>Settings</span><small>⌘5</small></button>
+      </nav>
+
+      <div class="footer">
+        Data stays on <b>this</b> device (LocalStorage).<br/>
+        Tip: export weekly for backups.
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <h2 id="viewTitle">Dashboard</h2>
+        <div class="actions">
+          <div class="chip" id="todayChip">Today</div>
+          <button class="btn primary" id="btnAddEvent">+ Add date</button>
+          <button class="btn" id="btnCategories">Categories</button>
+        </div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <section class="view" id="view-dashboard">
+        <div class="grid">
+          <div class="card">
+            <div class="hd">
+              <h3>This week at a glance</h3>
+              <span class="pill" id="weekRangePill"></span>
+            </div>
+            <div class="bd">
+              <div class="kpis">
+                <div class="kpi">
+                  <div class="label">Upcoming (7 days)</div>
+                  <div class="value" id="kpiUpcoming">0</div>
+                </div>
+                <div class="kpi">
+                  <div class="label">Workstreams tracked</div>
+                  <div class="value" id="kpiWorkstreams">0</div>
+                </div>
+                <div class="kpi">
+                  <div class="label">Notes</div>
+                  <div class="value" id="kpiNotes">0</div>
+                </div>
+              </div>
+
+              <div class="spacer"></div>
+              <div class="hint">
+                Dashboard is intentionally simple: you’re busy. This is here to keep you honest, not overwhelmed.
+              </div>
+
+              <div class="spacer"></div>
+              <div class="list" id="upcomingList"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="hd">
+              <h3>Quick add: workstream</h3>
+              <span class="pill"><span class="dot" style="background:var(--accent-2)"></span> keep it tidy</span>
+            </div>
+            <div class="bd">
+              <div class="form" id="wsForm">
+                <div class="field">
+                  <label for="wsName">Workstream name</label>
+                  <input id="wsName" placeholder="e.g., SQR Communications" />
+                </div>
+                <div class="field">
+                  <label for="wsStatus">Status</label>
+                  <select id="wsStatus">
+                    <option value="On track">On track</option>
+                    <option value="At risk">At risk</option>
+                    <option value="Blocked">Blocked</option>
+                    <option value="Done">Done</option>
+                  </select>
+                </div>
+                <button class="btn primary" id="btnAddWs" type="button">Add workstream</button>
+              </div>
+
+              <div class="spacer"></div>
+              <div class="list" id="wsMiniList"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CALENDAR -->
+      <section class="view" id="view-calendar" style="display:none">
+        <div class="grid">
+          <div class="card">
+            <div class="hd">
+              <h3>Calendar</h3>
+              <span class="pill"><span class="dot" style="background:var(--accent)"></span> ranges supported</span>
+            </div>
+            <div class="bd">
+              <div class="cal">
+                <div class="calbar">
+                  <div class="left">
+                    <button class="btn" id="calPrev" type="button">←</button>
+                    <button class="btn" id="calToday" type="button">Today</button>
+                    <button class="btn" id="calNext" type="button">→</button>
+                  </div>
+                  <h4 id="calTitle"></h4>
+                  <div></div>
+                </div>
+
+                <div class="calgrid" id="dowRow"></div>
+                <div class="calgrid" id="calGrid"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="hd">
+              <h3>Selected day</h3>
+              <span class="pill" id="selectedDayPill">—</span>
+            </div>
+            <div class="bd">
+              <div class="list" id="dayEvents"></div>
+              <div class="spacer"></div>
+              <button class="btn primary" id="btnAddEventFromDay" type="button">+ Add to this day</button>
+              <div class="spacer"></div>
+              <div class="hint">
+                Tip: use categories like <b>SQR</b>, <b>Insight</b>, <b>ISA</b>, <b>Ops</b>, <b>Personal</b>. Keep it real.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- WORKSTREAMS -->
+      <section class="view" id="view-workstreams" style="display:none">
+        <div class="card">
+          <div class="hd">
+            <h3>Workstreams</h3>
+            <span class="pill"><span class="dot" style="background:var(--accent-3)"></span> your mini PM board</span>
+          </div>
+          <div class="bd">
+            <div class="hint">Hard truth: if it isn’t written down, it’s a rumor.</div>
+            <div class="spacer"></div>
+            <div class="list" id="wsList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NOTES -->
+      <section class="view" id="view-notes" style="display:none">
+        <div class="grid">
+          <div class="card">
+            <div class="hd">
+              <h3>Notes</h3>
+              <span class="pill"><span class="dot" style="background:var(--accent-4)"></span> brain dump</span>
+            </div>
+            <div class="bd">
+              <div class="form">
+                <div class="field">
+                  <label for="noteTitle">Title</label>
+                  <input id="noteTitle" placeholder="e.g., PM check-in agenda" />
+                </div>
+                <div class="field">
+                  <label for="noteBody">Content</label>
+                  <textarea id="noteBody" placeholder="Write it like you’ll forget it tomorrow (you will)."></textarea>
+                </div>
+                <button class="btn primary" id="btnAddNote" type="button">Save note</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="hd">
+              <h3>Saved</h3>
+              <span class="pill" id="noteCountPill">0</span>
+            </div>
+            <div class="bd">
+              <div class="list" id="notesList"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="view" id="view-settings" style="display:none">
+        <div class="grid">
+          <div class="card">
+            <div class="hd">
+              <h3>Export / Import</h3>
+              <span class="pill">backup like an adult</span>
+            </div>
+            <div class="bd">
+              <div class="hint">
+                GitHub Pages can host this file, but your data lives locally in your browser. Export if you want a portable backup.
+              </div>
+              <div class="spacer"></div>
+              <div class="actions">
+                <button class="btn primary" id="btnExport" type="button">Export JSON</button>
+                <button class="btn" id="btnImport" type="button">Import JSON</button>
+                <input type="file" id="importFile" accept="application/json" style="display:none" />
+              </div>
+              <div class="spacer"></div>
+              <div class="hint danger">Reset is forever.</div>
+              <div class="spacer"></div>
+              <button class="btn" id="btnReset" type="button">Reset everything</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="hd">
+              <h3>Where files live</h3>
+              <span class="pill">FYI</span>
+            </div>
+            <div class="bd">
+              <div class="hint">
+                That Windows path you mentioned (<b>C:\Users\SSosa7\OneDrive - NYC Public Schools\Check-in Agenda</b>) can store exported backups.
+                This webpage can't write directly to your OneDrive folder (browser sandbox), but export/import makes it painless.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add Event Modal -->
+  <div class="overlay" id="eventModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle">
+      <div class="mh">
+        <h3 id="eventModalTitle">Add date</h3>
+        <button class="x" id="closeEventModal" aria-label="Close">✕</button>
+      </div>
+      <div class="mb">
+        <div class="two">
+          <div class="card" style="box-shadow:none">
+            <div class="bd">
+              <div class="form">
+                <div class="field">
+                  <label for="evTitle">Title</label>
+                  <input id="evTitle" placeholder="e.g., SQR Principal Digest submission" />
+                </div>
+                <div class="field">
+                  <label for="evCategory">Category</label>
+                  <select id="evCategory"></select>
+                </div>
+                <div class="two">
+                  <div class="field">
+                    <label for="evStart">Start date</label>
+                    <input id="evStart" type="date" />
+                  </div>
+                  <div class="field">
+                    <label for="evEnd">End date (optional)</label>
+                    <input id="evEnd" type="date" />
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="evNotes">Notes (optional)</label>
+                  <textarea id="evNotes" placeholder="Dependencies, links, who owes what, etc."></textarea>
+                </div>
+                <button class="btn primary" id="btnSaveEvent" type="button">Save</button>
+              </div>
+              <div class="spacer"></div>
+              <div class="hint">Ranges show as bars on each day. If you leave End blank, it’s a single-day item.</div>
+            </div>
+          </div>
+
+          <div class="card" style="box-shadow:none">
+            <div class="bd">
+              <div class="hint"><b>Preview</b> of what will appear:</div>
+              <div class="spacer"></div>
+              <div class="row">
+                <div>
+                  <div class="title" id="previewTitle">—</div>
+                  <div class="meta" id="previewDates">—</div>
+                </div>
+                <div class="right">
+                  <span class="tag" id="previewCat"><span class="dot"></span>—</span>
+                </div>
+              </div>
+              <div class="spacer"></div>
+              <div class="hint" id="previewNotes"> </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories Modal -->
+  <div class="overlay" id="catModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="catModalTitle">
+      <div class="mh">
+        <h3 id="catModalTitle">Categories</h3>
+        <button class="x" id="closeCatModal" aria-label="Close">✕</button>
+      </div>
+      <div class="mb">
+        <div class="two">
+          <div class="card" style="box-shadow:none">
+            <div class="bd">
+              <div class="form">
+                <div class="field">
+                  <label for="catLabel">New category label</label>
+                  <input id="catLabel" placeholder="e.g., Insight" />
+                </div>
+                <div class="field">
+                  <label for="catColor">Color</label>
+                  <input id="catColor" type="color" value="#9a5b43" />
+                </div>
+                <button class="btn primary" id="btnAddCategory" type="button">Add category</button>
+              </div>
+              <div class="spacer"></div>
+              <div class="hint">Keep it short. If you make 37 categories, I’m calling you (kidding… mostly).</div>
+            </div>
+          </div>
+          <div class="card" style="box-shadow:none">
+            <div class="bd">
+              <div class="list" id="catList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ---------- Storage ----------
+  const KEY = "dailyHub.v1";
+
+  const defaultData = () => ({
+    categories: [
+      { id: crypto.randomUUID(), label: "SQR", color: "#9a5b43" },
+      { id: crypto.randomUUID(), label: "Insight", color: "#2f4858" },
+      { id: crypto.randomUUID(), label: "ISA", color: "#6b7d4e" },
+      { id: crypto.randomUUID(), label: "Ops", color: "#7a5c8a" },
+      { id: crypto.randomUUID(), label: "Personal", color: "#b85f7e" },
+    ],
+    events: [],
+    workstreams: [],
+    notes: []
+  });
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(KEY);
+      if(!raw) return defaultData();
+      const parsed = JSON.parse(raw);
+      return {
+        ...defaultData(),
+        ...parsed,
+        categories: Array.isArray(parsed.categories) && parsed.categories.length ? parsed.categories : defaultData().categories,
+        events: Array.isArray(parsed.events) ? parsed.events : [],
+        workstreams: Array.isArray(parsed.workstreams) ? parsed.workstreams : [],
+        notes: Array.isArray(parsed.notes) ? parsed.notes : [],
+      };
+    }catch{
+      return defaultData();
+    }
+  }
+  function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+  let state = load();
+
+  // ---------- Helpers ----------
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
+  const fmt = (d) => d.toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" });
+  const toISO = (d) => d.toISOString().slice(0,10);
+  const fromISO = (s) => {
+    const [y,m,dd] = s.split("-").map(Number);
+    return new Date(y, m-1, dd);
+  };
+
+  function normalizeRange(startISO, endISO){
+    const s = startISO;
+    const e = endISO || startISO;
+    if(!s) return null;
+    return (s <= e) ? { startISO:s, endISO:e } : { startISO:e, endISO:s };
+  }
+
+  function inRange(dayISO, startISO, endISO){
+    return dayISO >= startISO && dayISO <= endISO;
+  }
+
+  function categoryById(id){
+    return state.categories.find(c => c.id === id) || {label:"Uncategorized", color:"#9a5b43"};
+  }
+
+  // ---------- Views ----------
+  const views = ["dashboard","calendar","workstreams","notes","settings"];
+  let activeView = "dashboard";
+
+  function setView(v){
+    if(!views.includes(v)) return;
+    activeView = v;
+    $("#viewTitle").textContent = v.charAt(0).toUpperCase()+v.slice(1);
+    $$(".nav button").forEach(b => b.classList.toggle("active", b.dataset.view === v));
+    views.forEach(name => {
+      const el = $("#view-"+name);
+      if(el) el.style.display = (name===v) ? "" : "none";
+    });
+    // refresh per view
+    if(v==="dashboard") renderDashboard();
+    if(v==="calendar") renderCalendar();
+    if(v==="workstreams") renderWorkstreams();
+    if(v==="notes") renderNotes();
+  }
+
+  // keyboard shortcuts (nice little flex)
+  window.addEventListener("keydown", (e) => {
+    if((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey){
+      const map = { "1":"dashboard", "2":"calendar", "3":"workstreams", "4":"notes", "5":"settings" };
+      if(map[e.key]){
+        e.preventDefault();
+        setView(map[e.key]);
+      }
+    }
+    if(e.key === "Escape"){
+      closeModal($("#eventModal"));
+      closeModal($("#catModal"));
+    }
+  });
+
+  // ---------- Modals ----------
+  function openModal(el){
+    if(!el) return;
+    el.classList.add("open");
+    el.setAttribute("aria-hidden","false");
+  }
+  function closeModal(el){
+    if(!el) return;
+    el.classList.remove("open");
+    el.setAttribute("aria-hidden","true");
+  }
+  $("#eventModal").addEventListener("click", (e)=>{ if(e.target.id==="eventModal") closeModal($("#eventModal")); });
+  $("#catModal").addEventListener("click", (e)=>{ if(e.target.id==="catModal") closeModal($("#catModal")); });
+
+  $("#closeEventModal").addEventListener("click", ()=> closeModal($("#eventModal")));
+  $("#closeCatModal").addEventListener("click", ()=> closeModal($("#catModal")));
+
+  $("#btnAddEvent").addEventListener("click", () => openEventModal());
+  $("#btnCategories").addEventListener("click", () => { renderCategories(); openModal($("#catModal")); });
+
+  // ---------- Category management ----------
+  function renderCategories(){
+    const list = $("#catList");
+    list.innerHTML = "";
+    state.categories.forEach(cat => {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `
+        <div>
+          <div class="title">${escapeHtml(cat.label)}</div>
+          <div class="meta">Used by ${state.events.filter(e=>e.categoryId===cat.id).length} date(s)</div>
+        </div>
+        <div class="right">
+          <span class="tag"><span class="dot" style="background:${cat.color}"></span>${escapeHtml(cat.label)}</span>
+          <button class="btn" type="button" data-del="${cat.id}">Delete</button>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+
+    // wire delete
+    $$("button[data-del]", list).forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-del");
+        // don’t delete if would orphan too much silently; we’ll reassign to first category
+        const fallback = state.categories.find(c=>c.id!==id);
+        if(!fallback) return alert("You need at least one category.");
+        state.events = state.events.map(ev => ev.categoryId===id ? ({...ev, categoryId: fallback.id}) : ev);
+        state.categories = state.categories.filter(c => c.id !== id);
+        save();
+        refreshAll();
+        renderCategories();
+      });
+    });
+
+    renderCategorySelects();
+  }
+
+  $("#btnAddCategory").addEventListener("click", () => {
+    const label = $("#catLabel").value.trim();
+    const color = $("#catColor").value || "#9a5b43";
+    if(!label) return alert("Give the category a label.");
+    if(state.categories.some(c => c.label.toLowerCase() === label.toLowerCase())) {
+      return alert("That category already exists.");
+    }
+    state.categories.push({ id: crypto.randomUUID(), label, color });
+    $("#catLabel").value = "";
+    save();
+    refreshAll();
+    renderCategories();
+  });
+
+  function renderCategorySelects(){
+    const sel = $("#evCategory");
+    sel.innerHTML = "";
+    state.categories.forEach(cat => {
+      const opt = document.createElement("option");
+      opt.value = cat.id;
+      opt.textContent = cat.label;
+      sel.appendChild(opt);
+    });
+  }
+
+  // ---------- Events ----------
+  let calendarCursor = new Date(); // month view cursor
+  let selectedDayISO = toISO(new Date());
+
+  function openEventModal(presetISO=null){
+    renderCategorySelects();
+    const todayISO = toISO(new Date());
+    $("#evTitle").value = "";
+    $("#evNotes").value = "";
+    $("#evStart").value = presetISO || todayISO;
+    $("#evEnd").value = "";
+    $("#evCategory").value = state.categories[0]?.id || "";
+    updateEventPreview();
+    openModal($("#eventModal"));
+  }
+
+  function updateEventPreview(){
+    const title = $("#evTitle").value.trim() || "Untitled";
+    const cat = categoryById($("#evCategory").value);
+    const r = normalizeRange($("#evStart").value, $("#evEnd").value);
+    $("#previewTitle").textContent = title;
+    $("#previewCat").innerHTML = `<span class="dot" style="background:${cat.color}"></span>${escapeHtml(cat.label)}`;
+    if(r){
+      const s = fmt(fromISO(r.startISO));
+      const e = fmt(fromISO(r.endISO));
+      $("#previewDates").textContent = (r.startISO===r.endISO) ? s : `${s} → ${e}`;
+    }else{
+      $("#previewDates").textContent = "—";
+    }
+    const notes = $("#evNotes").value.trim();
+    $("#previewNotes").textContent = notes ? notes : " ";
+  }
+
+  ["evTitle","evCategory","evStart","evEnd","evNotes"].forEach(id => {
+    $("#"+id).addEventListener("input", updateEventPreview);
+    $("#"+id).addEventListener("change", updateEventPreview);
+  });
+
+  $("#btnSaveEvent").addEventListener("click", () => {
+    const title = $("#evTitle").value.trim();
+    const catId = $("#evCategory").value;
+    const r = normalizeRange($("#evStart").value, $("#evEnd").value);
+    if(!title) return alert("Add a title.");
+    if(!r) return alert("Pick a date.");
+    state.events.unshift({
+      id: crypto.randomUUID(),
+      title,
+      categoryId: catId || (state.categories[0]?.id ?? ""),
+      startISO: r.startISO,
+      endISO: r.endISO,
+      notes: $("#evNotes").value.trim(),
+      createdAt: Date.now()
+    });
+    save();
+    closeModal($("#eventModal"));
+    refreshAll();
+  });
+
+  function eventsOnDay(dayISO){
+    return state.events.filter(ev => inRange(dayISO, ev.startISO, ev.endISO));
+  }
+
+  function upcomingEvents(days=7){
+    const todayISO = toISO(new Date());
+    const end = new Date(); end.setDate(end.getDate()+days);
+    const endISO = toISO(end);
+    // events whose range overlaps [today, end]
+    return state.events.filter(ev => !(ev.endISO < todayISO || ev.startISO > endISO))
+      .sort((a,b) => (a.startISO.localeCompare(b.startISO)));
+  }
+
+  function deleteEvent(id){
+    state.events = state.events.filter(e => e.id !== id);
+    save();
+    refreshAll();
+  }
+
+  // ---------- Workstreams ----------
+  $("#btnAddWs").addEventListener("click", () => {
+    const name = $("#wsName").value.trim();
+    const status = $("#wsStatus").value;
+    if(!name) return alert("Give the workstream a name.");
+    state.workstreams.unshift({ id: crypto.randomUUID(), name, status, updatedAt: Date.now() });
+    $("#wsName").value = "";
+    save();
+    refreshAll();
+  });
+
+  function setWsStatus(id, status){
+    state.workstreams = state.workstreams.map(w => w.id===id ? ({...w, status, updatedAt: Date.now()}) : w);
+    save();
+    refreshAll();
+  }
+
+  function deleteWs(id){
+    state.workstreams = state.workstreams.filter(w=>w.id!==id);
+    save();
+    refreshAll();
+  }
+
+  // ---------- Notes ----------
+  $("#btnAddNote").addEventListener("click", () => {
+    const title = $("#noteTitle").value.trim();
+    const body = $("#noteBody").value.trim();
+    if(!title) return alert("Give the note a title.");
+    state.notes.unshift({ id: crypto.randomUUID(), title, body, createdAt: Date.now() });
+    $("#noteTitle").value = "";
+    $("#noteBody").value = "";
+    save();
+    refreshAll();
+  });
+
+  function deleteNote(id){
+    state.notes = state.notes.filter(n=>n.id!==id);
+    save();
+    refreshAll();
+  }
+
+  // ---------- Calendar rendering ----------
+  const dows = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  function renderCalendar(){
+    // DOW header once
+    const dowRow = $("#dowRow");
+    dowRow.innerHTML = "";
+    dows.forEach(d => {
+      const el = document.createElement("div");
+      el.className = "dow";
+      el.textContent = d;
+      dowRow.appendChild(el);
+    });
+
+    const y = calendarCursor.getFullYear();
+    const m = calendarCursor.getMonth();
+    const first = new Date(y,m,1);
+    const start = new Date(first);
+    start.setDate(1 - first.getDay()); // back to Sunday
+    const grid = $("#calGrid");
+    grid.innerHTML = "";
+
+    $("#calTitle").textContent = first.toLocaleDateString(undefined, { month:"long", year:"numeric" });
+
+    for(let i=0;i<42;i++){
+      const day = new Date(start);
+      day.setDate(start.getDate()+i);
+      const dayISO = toISO(day);
+      const isMuted = day.getMonth() !== m;
+
+      const el = document.createElement("div");
+      el.className = "day" + (isMuted ? " muted" : "");
+      el.innerHTML = `
+        <div class="num">${day.getDate()}</div>
+        <div class="bars"></div>
+      `;
+
+      // bars (max 3)
+      const bars = $(".bars", el);
+      const events = eventsOnDay(dayISO).slice(0,3);
+      events.forEach(ev => {
+        const cat = categoryById(ev.categoryId);
+        const b = document.createElement("div");
+        b.className = "bar";
+        b.style.background = cat.color + "33";
+        b.style.borderColor = cat.color + "33";
+        bars.appendChild(b);
+      });
+
+      el.addEventListener("click", () => {
+        selectedDayISO = dayISO;
+        renderSelectedDay();
+      });
+
+      grid.appendChild(el);
+    }
+
+    renderSelectedDay();
+  }
+
+  function renderSelectedDay(){
+    const d = fromISO(selectedDayISO);
+    $("#selectedDayPill").textContent = fmt(d);
+    const list = $("#dayEvents");
+    list.innerHTML = "";
+    const events = eventsOnDay(selectedDayISO).sort((a,b)=>a.startISO.localeCompare(b.startISO));
+    if(events.length===0){
+      const empty = document.createElement("div");
+      empty.className = "hint";
+      empty.textContent = "No dates here yet. Add one and let future-you say thank you.";
+      list.appendChild(empty);
+    }else{
+      events.forEach(ev => {
+        const cat = categoryById(ev.categoryId);
+        const row = document.createElement("div");
+        row.className = "row";
+        const dateText = (ev.startISO===ev.endISO)
+          ? fmt(fromISO(ev.startISO))
+          : `${fmt(fromISO(ev.startISO))} → ${fmt(fromISO(ev.endISO))}`;
+        row.innerHTML = `
+          <div>
+            <div class="title">${escapeHtml(ev.title)}</div>
+            <div class="meta">${escapeHtml(dateText)}${ev.notes ? " • " + escapeHtml(ev.notes) : ""}</div>
+          </div>
+          <div class="right">
+            <span class="tag"><span class="dot" style="background:${cat.color}"></span>${escapeHtml(cat.label)}</span>
+            <button class="btn" type="button" data-evdel="${ev.id}">Delete</button>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+      $$("button[data-evdel]", list).forEach(btn => {
+        btn.addEventListener("click", () => deleteEvent(btn.getAttribute("data-evdel")));
+      });
+    }
+
+    $("#btnAddEventFromDay").onclick = () => openEventModal(selectedDayISO);
+  }
+
+  $("#calPrev").addEventListener("click", () => { calendarCursor.setMonth(calendarCursor.getMonth()-1); renderCalendar(); });
+  $("#calNext").addEventListener("click", () => { calendarCursor.setMonth(calendarCursor.getMonth()+1); renderCalendar(); });
+  $("#calToday").addEventListener("click", () => {
+    calendarCursor = new Date();
+    selectedDayISO = toISO(new Date());
+    renderCalendar();
+  });
+
+  // ---------- Dashboard rendering ----------
+  function renderDashboard(){
+    // week range
+    const today = new Date();
+    const start = new Date(today); start.setDate(today.getDate() - today.getDay());
+    const end = new Date(start); end.setDate(start.getDate()+6);
+    $("#weekRangePill").textContent = `${fmt(start)} – ${fmt(end)}`;
+
+    const upcoming = upcomingEvents(7);
+    $("#kpiUpcoming").textContent = String(upcoming.length);
+    $("#kpiWorkstreams").textContent = String(state.workstreams.length);
+    $("#kpiNotes").textContent = String(state.notes.length);
+
+    const list = $("#upcomingList");
+    list.innerHTML = "";
+    if(upcoming.length===0){
+      const empty = document.createElement("div");
+      empty.className = "hint";
+      empty.textContent = "No upcoming dates. Either you’re thriving… or you haven’t added them yet.";
+      list.appendChild(empty);
+    }else{
+      upcoming.slice(0,8).forEach(ev => {
+        const cat = categoryById(ev.categoryId);
+        const row = document.createElement("div");
+        row.className = "row";
+        const dateText = (ev.startISO===ev.endISO)
+          ? fmt(fromISO(ev.startISO))
+          : `${fmt(fromISO(ev.startISO))} → ${fmt(fromISO(ev.endISO))}`;
+        row.innerHTML = `
+          <div>
+            <div class="title">${escapeHtml(ev.title)}</div>
+            <div class="meta">${escapeHtml(dateText)}${ev.notes ? " • " + escapeHtml(ev.notes) : ""}</div>
+          </div>
+          <div class="right">
+            <span class="tag"><span class="dot" style="background:${cat.color}"></span>${escapeHtml(cat.label)}</span>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    // workstreams mini list
+    const wsMini = $("#wsMiniList");
+    wsMini.innerHTML = "";
+    state.workstreams.slice(0,5).forEach(w => {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `
+        <div>
+          <div class="title">${escapeHtml(w.name)}</div>
+          <div class="meta">Updated ${timeAgo(w.updatedAt)}</div>
+        </div>
+        <div class="right">
+          <span class="tag">${escapeHtml(w.status)}</span>
+        </div>
+      `;
+      wsMini.appendChild(row);
+    });
+    if(state.workstreams.length===0){
+      const empty = document.createElement("div");
+      empty.className = "hint";
+      empty.textContent = "Add your main workstreams so you can stop keeping them in your head like a stress souvenir.";
+      wsMini.appendChild(empty);
+    }
+  }
+
+  // ---------- Workstreams rendering ----------
+  function renderWorkstreams(){
+    const list = $("#wsList");
+    list.innerHTML = "";
+    if(state.workstreams.length===0){
+      const empty = document.createElement("div");
+      empty.className = "hint";
+      empty.textContent = "No workstreams yet. Add one from the Dashboard quick add.";
+      list.appendChild(empty);
+      return;
+    }
+    state.workstreams.forEach(w => {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `
+        <div>
+          <div class="title">${escapeHtml(w.name)}</div>
+          <div class="meta">Updated ${timeAgo(w.updatedAt)}</div>
+        </div>
+        <div class="right" style="align-items:flex-end">
+          <select class="btn" data-ws="${w.id}" aria-label="Status">
+            ${["On track","At risk","Blocked","Done"].map(s => `<option ${s===w.status?"selected":""}>${s}</option>`).join("")}
+          </select>
+          <button class="btn" data-wsdel="${w.id}" type="button">Delete</button>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+    $$("select[data-ws]", list).forEach(sel => {
+      sel.addEventListener("change", () => setWsStatus(sel.getAttribute("data-ws"), sel.value));
+    });
+    $$("button[data-wsdel]", list).forEach(btn => {
+      btn.addEventListener("click", () => deleteWs(btn.getAttribute("data-wsdel")));
+    });
+  }
+
+  // ---------- Notes rendering ----------
+  function renderNotes(){
+    $("#noteCountPill").textContent = String(state.notes.length);
+    const list = $("#notesList");
+    list.innerHTML = "";
+    if(state.notes.length===0){
+      const empty = document.createElement("div");
+      empty.className = "hint";
+      empty.textContent = "No notes yet. Make it messy. Then make it useful.";
+      list.appendChild(empty);
+      return;
+    }
+    state.notes.forEach(n => {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `
+        <div style="min-width:0">
+          <div class="title">${escapeHtml(n.title)}</div>
+          <div class="meta">${escapeHtml((n.body||"").slice(0,120))}${(n.body||"").length>120?"…":""}</div>
+        </div>
+        <div class="right">
+          <span class="tag">${new Date(n.createdAt).toLocaleDateString()}</span>
+          <button class="btn" data-ndel="${n.id}" type="button">Delete</button>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+    $$("button[data-ndel]", list).forEach(btn => {
+      btn.addEventListener("click", () => deleteNote(btn.getAttribute("data-ndel")));
+    });
+  }
+
+  // ---------- Export / import / reset ----------
+  $("#btnExport").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `daily-hub-backup-${toISO(new Date())}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  });
+
+  $("#btnImport").addEventListener("click", () => $("#importFile").click());
+  $("#importFile").addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if(!file) return;
+    try{
+      const text = await file.text();
+      const imported = JSON.parse(text);
+      // light validation
+      if(!imported || typeof imported !== "object") throw new Error("Bad file");
+      state = { ...defaultData(), ...imported };
+      save();
+      refreshAll();
+      alert("Imported. You're back in business.");
+    }catch(err){
+      alert("Could not import that file. Make sure it’s a Daily Hub export JSON.");
+    }finally{
+      e.target.value = "";
+    }
+  });
+
+  $("#btnReset").addEventListener("click", () => {
+    const ok = confirm("Reset EVERYTHING? This clears dates, workstreams, notes, and categories.");
+    if(!ok) return;
+    state = defaultData();
+    save();
+    refreshAll();
+  });
+
+  // ---------- Nav wiring ----------
+  $$(".nav button").forEach(btn => {
+    btn.addEventListener("click", () => setView(btn.dataset.view));
+  });
+
+  // ---------- Misc UI ----------
+  function refreshAll(){
+    // top chip
+    $("#todayChip").textContent = new Date().toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric" });
+    renderCategorySelects();
+    renderDashboard();
+    if(activeView==="calendar") renderCalendar();
+    if(activeView==="workstreams") renderWorkstreams();
+    if(activeView==="notes") renderNotes();
+  }
+
+  function timeAgo(ts){
+    const diff = Date.now() - ts;
+    const mins = Math.floor(diff/60000);
+    if(mins < 1) return "just now";
+    if(mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins/60);
+    if(hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs/24);
+    return `${days}d ago`;
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (c)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  // ---------- Init ----------
+  // set initial calendar cursor to this month; selected day = today
+  calendarCursor = new Date();
+  selectedDayISO = toISO(new Date());
+  refreshAll();
+  setView("dashboard");
+})();
+</script>
+</body>
+</html>
