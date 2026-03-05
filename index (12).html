@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Daily Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:      #f5f0e8;
+  --surface: #faf7f2;
+  --card:    #ffffff;
+  --border:  #e8e0d0;
+  --border2: #d4c9b5;
+  --text:    #2c2416;
+  --t2:      #6b5d4f;
+  --t3:      #9e8f82;
+  --accent:  #b85c38;
+  --accent2: #d4754e;
+  --green:   #4a7c59;
+  --blue:    #3d6b8e;
+  --purple:  #7c5c8e;
+  --yellow:  #c4952a;
+  --red:     #c44a3a;
+  --radius:  12px;
+  --shadow:  0 2px 12px rgba(44,36,22,.08);
+  --shadow-lg: 0 8px 32px rgba(44,36,22,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+button{cursor:pointer;font-family:inherit}
+input,textarea,select{font-family:inherit}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* LAYOUT */
+.shell{display:flex;height:100vh}
+.sidebar{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;transition:width .2s;overflow:hidden}
+.sidebar.collapsed{width:50px}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;gap:10px}
+.content{flex:1;overflow-y:auto;padding:20px}
+
+/* SIDEBAR */
+.sb-head{padding:14px 10px 10px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:9px}
+.sb-icon{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0}
+.sb-title-wrap{overflow:hidden}
+.sb-title{font-family:'Lora',serif;font-size:13px;font-weight:600;white-space:nowrap}
+.sb-sub{font-size:9px;color:var(--t3)}
+.sb-nav{flex:1;overflow-y:auto;padding:8px 6px}
+.sb-label{font-size:9px;font-weight:700;color:var(--t3);letter-spacing:.08em;padding:10px 8px 4px;white-space:nowrap;overflow:hidden}
+.sb-btn{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;border:none;background:transparent;color:var(--t2);width:100%;text-align:left;font-size:12.5px;transition:all .12s;white-space:nowrap;overflow:hidden}
+.sb-btn:hover{background:var(--border);color:var(--text)}
+.sb-btn.active{background:var(--accent);color:#fff;font-weight:600}
+.sb-btn .ico{font-size:14px;flex-shrink:0;width:18px;text-align:center}
+.sb-btn .lbl{flex:1;overflow:hidden;text-overflow:ellipsis}
+.sb-btn .bdg{font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;background:rgba(255,255,255,.3);flex-shrink:0}
+.sb-btn:not(.active) .bdg{background:var(--red);color:#fff}
+.sb-foot{padding:8px 6px;border-top:1px solid var(--border);flex-shrink:0}
+.sb-collapse{width:100%;padding:6px;border:none;background:transparent;color:var(--t3);border-radius:6px;font-size:13px}
+.sb-collapse:hover{background:var(--border)}
+.sidebar.collapsed .lbl,.sidebar.collapsed .sb-label,.sidebar.collapsed .sb-title-wrap{display:none}
+
+/* TOPBAR */
+.page-title{font-family:'Lora',serif;font-size:17px;font-weight:600;flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--card);color:var(--t2);font-size:12.5px;font-weight:500;cursor:pointer;transition:all .12s;white-space:nowrap}
+.btn:hover{background:var(--border);color:var(--text)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent2);border-color:var(--accent2)}
+.btn.sm{padding:5px 10px;font-size:11.5px}
+.btn.ghost{background:transparent;border-color:transparent;padding-left:6px;padding-right:6px}
+.btn.ghost:hover{background:var(--border)}
+.ml-auto{margin-left:auto}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-head{padding:12px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.card-body{padding:12px 16px}
+.card-title{font-family:'Lora',serif;font-size:14px;font-weight:600}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:900px){.g2,.g3{grid-template-columns:1fr}}
+
+/* FORMS */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:10.5px;font-weight:700;color:var(--t3);letter-spacing:.06em;margin-bottom:4px;text-transform:uppercase}
+.inp{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:8px 11px;color:var(--text);font-size:13px;outline:none;transition:border-color .12s}
+.inp:focus{border-color:var(--accent)}
+textarea.inp{resize:vertical;min-height:70px;line-height:1.6}
+select.inp{cursor:pointer}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(44,36,22,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;animation:fi .15s}
+.modal{background:var(--card);border-radius:16px;box-shadow:var(--shadow-lg);width:100%;max-width:540px;max-height:92vh;display:flex;flex-direction:column;animation:su .18s}
+.modal.wide{max-width:700px}
+.modal-head{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.modal-head h2{font-family:'Lora',serif;font-size:15px;font-weight:600;flex:1}
+.modal-body{padding:16px 20px;overflow-y:auto;flex:1}
+.modal-foot{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes su{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.pill.green{background:#e8f5ed;color:var(--green)}
+.pill.red{background:#fdf0ee;color:var(--red)}
+.pill.yellow{background:#fef8ec;color:var(--yellow)}
+.pill.blue{background:#eaf1f7;color:var(--blue)}
+.pill.purple{background:#f3eef7;color:var(--purple)}
+.pill.gray{background:var(--border);color:var(--t2)}
+.pill.orange{background:#fdf3ee;color:var(--accent)}
+
+/* TODO */
+.todo-item{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border-radius:9px;background:var(--card);border:1px solid var(--border);margin-bottom:5px;transition:border-color .12s}
+.todo-item:hover{border-color:var(--border2)}
+.todo-item.done{opacity:.5}
+.todo-item.done .todo-text{text-decoration:line-through;color:var(--t3)}
+.todo-cb{width:17px;height:17px;border-radius:5px;border:2px solid var(--border2);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;font-size:10px}
+.todo-cb.chk{background:var(--green);border-color:var(--green);color:#fff}
+.todo-text{flex:1;font-size:13px;line-height:1.5}
+.todo-meta{font-size:10.5px;color:var(--t3);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.todo-actions{display:flex;gap:3px;opacity:0;transition:opacity .1s;flex-shrink:0}
+.todo-item:hover .todo-actions{opacity:1}
+.dg{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.06em;padding:10px 0 4px;text-transform:uppercase}
+.dg.od{color:var(--red)}
+
+/* NOTES */
+.note-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:13px 16px;margin-bottom:9px;cursor:pointer;transition:all .12s}
+.note-card:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.note-title{font-family:'Lora',serif;font-size:13.5px;font-weight:600;margin-bottom:3px}
+.note-meta{font-size:11px;color:var(--t3);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.note-preview{font-size:12px;color:var(--t2);margin-top:6px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* PROJECT CARDS */
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:13px 14px;cursor:pointer;transition:all .12s;position:relative}
+.pcard:hover{border-color:var(--border2);box-shadow:var(--shadow);transform:translateY(-1px)}
+.pcard .bar{height:3px;border-radius:3px;margin-bottom:10px}
+.pcard .pt{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:5px}
+.pcard .pm{font-size:11px;color:var(--t3);display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.pcard .pa{position:absolute;top:9px;right:9px;display:flex;gap:3px;opacity:0;transition:opacity .1s}
+.pcard:hover .pa{opacity:1}
+
+/* CALENDAR */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dh{text-align:center;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.05em;padding:4px 0;text-transform:uppercase}
+.cal-day{min-height:70px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:5px 6px;cursor:pointer;transition:border-color .12s;overflow:hidden}
+.cal-day:hover{border-color:var(--border2)}
+.cal-day.today{border-color:var(--accent);border-width:2px}
+.cal-day.om{opacity:.4}
+.cal-dn{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:2px}
+.cal-day.today .cal-dn{color:var(--accent);font-weight:700}
+.cal-ev{font-size:9px;border-radius:3px;padding:1px 4px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--accent);color:#fff}
+.cal-ev.green{background:var(--green)}
+.cal-ev.blue{background:var(--blue)}
+.cal-ev.purple{background:var(--purple)}
+
+/* STATS */
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.stat-n{font-family:'Lora',serif;font-size:28px;font-weight:600;line-height:1}
+.stat-l{font-size:11px;color:var(--t3);margin-top:3px}
+
+/* EMPTY */
+.empty{text-align:center;padding:48px 20px;color:var(--t3)}
+.empty-ico{font-size:36px;margin-bottom:10px;opacity:.4}
+
+/* SEARCH */
+.sbar{display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:5px 10px;max-width:260px}
+.sbar input{border:none;background:transparent;outline:none;font-size:12.5px;color:var(--text);width:100%}
+.sbar input::placeholder{color:var(--t3)}
+
+.overdue{color:var(--red)!important}
+.soon{color:var(--yellow)!important}
+.row{display:flex;align-items:center;gap:8px}
+.row.wrap{flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <div class="sb-icon">⬡</div>
+      <div class="sb-title-wrap">
+        <div class="sb-title">Daily Hub</div>
+        <div class="sb-sub">Salma's workspace</div>
+      </div>
+    </div>
+    <div class="sb-nav" id="sb-nav"></div>
+    <div class="sb-foot">
+      <button class="sb-collapse" id="sb-toggle" title="Collapse sidebar">⇄</button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <span class="page-title" id="page-title"></span>
+      <div id="topbar-actions" class="row"></div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div id="modal-root"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────
+//  DAILY HUB  |  pure vanilla JS, zero dependencies
+// ─────────────────────────────────────────────────────────
+
+// ── UTILS ────────────────────────────────────────────────
+var _today = function(){ return new Date().toISOString().split('T')[0]; };
+var _now   = function(){ return new Date().toISOString(); };
+var _uid   = function(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); };
+var _fmt   = function(d){
+  if(!d) return '';
+  return new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+};
+var _fmtFull = function(d){
+  if(!d) return '';
+  return new Date(d+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+};
+var _isOD   = function(d){ return d && new Date(d+'T00:00:00') < new Date(new Date().toDateString()); };
+var _isSoon = function(d){
+  if(!d) return false;
+  var diff = (new Date(d+'T00:00:00') - new Date(new Date().toDateString())) / 86400000;
+  return diff >= 0 && diff <= 3;
+};
+var _esc = function(s){
+  return String(s||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+};
+var _lsGet = function(k,fb){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):fb; }catch(e){ return fb; } };
+var _lsSave= function(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
+
+// ── DATA ─────────────────────────────────────────────────
+var DB = {
+  todos:    function(){ return _lsGet('dh3-todos',[]); },
+  notes:    function(){ return _lsGet('dh3-notes',[]); },
+  cards:    function(){ return _lsGet('dh3-cards',[]); },
+  events:   function(){ return _lsGet('dh3-events',[]); },
+  settings: function(){ return _lsGet('dh3-settings',{
+    workstreams:['SQR','NSS','SPS','Insight','Accountability','ISA','OPE','OSP Ops','CCR','PPR','Other']
+  }); },
+  save: function(key,data){ _lsSave('dh3-'+key,data); }
+};
+
+// ── NAV ──────────────────────────────────────────────────
+var VIEWS = [
+  {id:'dashboard', label:'Dashboard',    icon:'◈'},
+  {id:'todo',      label:'To-Do',         icon:'✓'},
+  {id:'notes',     label:'Meeting Notes', icon:'◎'},
+  {id:'cards',     label:'Cards',         icon:'▦'},
+  {id:'calendar',  label:'Calendar',      icon:'⊡'}
+];
+
+var currentView = 'dashboard';
+
+function navigate(id){
+  currentView = id;
+  renderNav();
+  renderTopbar();
+  renderContent();
+}
+
+function renderNav(){
+  var todos  = DB.todos();
+  var cards  = DB.cards();
+  var tBadge = todos.filter(function(t){ return !t.done && t.date <= _today(); }).length;
+  var cBadge = cards.filter(function(c){ return c.status === 'blocked'; }).length;
+
+  var html = '';
+  for(var i=0; i<VIEWS.length; i++){
+    var v = VIEWS[i];
+    var badge = '';
+    if(v.id==='todo'  && tBadge) badge = tBadge;
+    if(v.id==='cards' && cBadge) badge = cBadge;
+    html += '<button class="sb-btn'+(currentView===v.id?' active':'')+'" onclick="navigate(\''+v.id+'\')">';
+    html += '<span class="ico">'+v.icon+'</span>';
+    html += '<span class="lbl">'+_esc(v.label)+'</span>';
+    if(badge) html += '<span class="bdg">'+badge+'</span>';
+    html += '</button>';
+  }
+  document.getElementById('sb-nav').innerHTML = html;
+}
+
+// ── TOPBAR ───────────────────────────────────────────────
+function renderTopbar(){
+  var titles = {dashboard:'Dashboard',todo:'To-Do',notes:'Meeting Notes',cards:'Cards',calendar:'Calendar'};
+  document.getElementById('page-title').textContent = titles[currentView]||currentView;
+  var a = document.getElementById('topbar-actions');
+  a.innerHTML = '';
+  if(currentView==='todo'){
+    a.innerHTML = '<button class="btn primary" onclick="openTodoModal()">+ Add Task</button>';
+  } else if(currentView==='notes'){
+    a.innerHTML = '<div class="sbar"><span style="color:var(--t3)">🔍</span><input type="text" id="notes-q" placeholder="Search…" oninput="renderContent()"/></div><button class="btn primary" onclick="openNoteModal()">+ New Note</button>';
+  } else if(currentView==='cards'){
+    a.innerHTML = '<div class="sbar"><span style="color:var(--t3)">🔍</span><input type="text" id="cards-q" placeholder="Search…" oninput="renderContent()"/></div><button class="btn primary" onclick="openCardModal()">+ New Card</button>';
+  } else if(currentView==='calendar'){
+    a.innerHTML = '<button class="btn primary" onclick="openEventModal(\'\',\'\')">+ Add Event</button>';
+  }
+}
+
+// ── CONTENT ──────────────────────────────────────────────
+function renderContent(){
+  var el = document.getElementById('content');
+  if(currentView==='dashboard') el.innerHTML = buildDashboard();
+  else if(currentView==='todo')     el.innerHTML = buildTodo();
+  else if(currentView==='notes')    el.innerHTML = buildNotes();
+  else if(currentView==='cards')    el.innerHTML = buildCards();
+  else if(currentView==='calendar') el.innerHTML = buildCalendar();
+}
+
+// ── DASHBOARD ────────────────────────────────────────────
+function buildDashboard(){
+  var todos  = DB.todos();
+  var cards  = DB.cards();
+  var notes  = DB.notes();
+  var events = DB.events();
+  var td     = _today();
+
+  var dueToday   = todos.filter(function(t){ return !t.done && t.date <= td; });
+  var blocked    = cards.filter(function(c){ return c.status==='blocked'; });
+  var todayEvts  = events.filter(function(e){ return e.date===td; });
+  var recentNotes= notes.slice().sort(function(a,b){ return b.date.localeCompare(a.date); }).slice(0,3);
+
+  var h = '<div style="max-width:1060px">';
+
+  // Greeting
+  var hr = new Date().getHours();
+  var greet = hr<12?'Good morning':(hr<17?'Good afternoon':'Good evening');
+  if(hr<12) greet='Good morning ☀️';
+  else if(hr<17) greet='Good afternoon 👋';
+  else greet='Good evening 🌙';
+
+  h += '<div style="margin-bottom:18px">';
+  h += '<div style="font-family:Lora,serif;font-size:22px;font-weight:600">'+greet+'</div>';
+  h += '<div style="font-size:12.5px;color:var(--t3);margin-top:2px">'+_fmtFull(td)+'</div>';
+  h += '</div>';
+
+  // Stats
+  h += '<div class="g3" style="margin-bottom:18px">';
+  h += '<div class="stat"><div class="stat-n">'+dueToday.length+'</div><div class="stat-l">Tasks due today</div>';
+  if(dueToday.length) h += '<button class="btn sm ghost" style="margin-top:8px;padding-left:0;color:var(--accent)" onclick="navigate(\'todo\')">View →</button>';
+  h += '</div>';
+  h += '<div class="stat"><div class="stat-n">'+cards.length+'</div><div class="stat-l" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">Active cards';
+  if(blocked.length) h += ' <span class="pill red">'+blocked.length+' blocked</span>';
+  h += '</div>';
+  if(cards.length) h += '<button class="btn sm ghost" style="margin-top:8px;padding-left:0;color:var(--accent)" onclick="navigate(\'cards\')">View →</button>';
+  h += '</div>';
+  h += '<div class="stat"><div class="stat-n">'+notes.length+'</div><div class="stat-l">Meeting notes</div>';
+  if(notes.length) h += '<button class="btn sm ghost" style="margin-top:8px;padding-left:0;color:var(--accent)" onclick="navigate(\'notes\')">View →</button>';
+  h += '</div></div>';
+
+  // Two col
+  h += '<div class="g2">';
+
+  // Today tasks
+  h += '<div class="card"><div class="card-head"><span>✓</span><span class="card-title">Today\'s Tasks</span><button class="btn sm ghost ml-auto" onclick="navigate(\'todo\')">All →</button></div>';
+  h += '<div class="card-body" style="padding:10px 14px">';
+  if(!dueToday.length){
+    h += '<div class="empty" style="padding:20px 0"><div class="empty-ico">🎉</div><div style="font-size:12.5px">Nothing due today!</div></div>';
+  } else {
+    dueToday.slice(0,6).forEach(function(t){
+      h += '<div class="todo-item" onclick="toggleTodo(\''+t.id+'\')" style="cursor:pointer">';
+      h += '<div class="todo-cb'+(t.done?' chk':'')+'">'+( t.done?'✓':'' )+'</div>';
+      h += '<div style="flex:1"><div class="todo-text">'+_esc(t.text)+'</div>';
+      if(t.workstream) h += '<div class="todo-meta">'+_esc(t.workstream)+'</div>';
+      h += '</div></div>';
+    });
+  }
+  h += '</div></div>';
+
+  // Right col
+  h += '<div style="display:flex;flex-direction:column;gap:14px">';
+
+  // Today events
+  h += '<div class="card"><div class="card-head"><span>⊡</span><span class="card-title">Today\'s Events</span><button class="btn sm ghost ml-auto" onclick="navigate(\'calendar\')">Calendar →</button></div>';
+  h += '<div class="card-body" style="padding:8px 14px">';
+  if(!todayEvts.length){
+    h += '<div style="color:var(--t3);font-size:12.5px;padding:6px 0">No events today</div>';
+  } else {
+    todayEvts.forEach(function(e){
+      h += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">';
+      if(e.time) h += '<span class="pill blue">'+_esc(e.time)+'</span>';
+      h += '<span style="font-size:12.5px">'+_esc(e.title)+'</span></div>';
+    });
+  }
+  h += '</div></div>';
+
+  // Recent notes
+  h += '<div class="card"><div class="card-head"><span>◎</span><span class="card-title">Recent Notes</span><button class="btn sm ghost ml-auto" onclick="navigate(\'notes\')">All →</button></div>';
+  h += '<div class="card-body" style="padding:8px 14px">';
+  if(!recentNotes.length){
+    h += '<div style="color:var(--t3);font-size:12.5px;padding:6px 0">No notes yet</div>';
+  } else {
+    recentNotes.forEach(function(n){
+      h += '<div style="padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="viewNote(\''+n.id+'\')">';
+      h += '<div style="font-size:12.5px;font-weight:600">'+_esc(n.title)+'</div>';
+      h += '<div style="font-size:11px;color:var(--t3)">'+_fmt(n.date)+(n.workstream?' · '+_esc(n.workstream):'')+'</div>';
+      h += '</div>';
+    });
+  }
+  h += '</div></div>';
+
+  h += '</div></div>'; // end two col
+
+  // Blocked banner
+  if(blocked.length){
+    h += '<div class="card" style="margin-top:16px;border-color:var(--red)">';
+    h += '<div class="card-head" style="background:#fdf0ee;border-radius:var(--radius) var(--radius) 0 0"><span>⛔</span><span class="card-title" style="color:var(--red)">Blocked ('+blocked.length+')</span><button class="btn sm ghost ml-auto" onclick="navigate(\'cards\')">View all →</button></div>';
+    h += '<div class="card-body" style="padding:8px 14px">';
+    blocked.forEach(function(c){
+      h += '<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border)">';
+      if(c.workstream) h += '<span class="pill gray">'+_esc(c.workstream)+'</span>';
+      h += '<span style="font-size:12.5px;flex:1">'+_esc(c.title)+'</span>';
+      if(c.blockerNote) h += '<span style="font-size:11px;color:var(--t3)">'+_esc(c.blockerNote)+'</span>';
+      h += '<button class="btn sm ghost" onclick="openCardModal(\''+c.id+'\')">Edit</button></div>';
+    });
+    h += '</div></div>';
+  }
+
+  h += '</div>';
+  return h;
+}
+
+// ── TO-DO ────────────────────────────────────────────────
+function buildTodo(){
+  var todos = DB.todos().slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+  var open  = todos.filter(function(t){ return !t.done; }).length;
+  var done  = todos.filter(function(t){ return t.done; }).length;
+  var td    = _today();
+
+  var h = '<div style="max-width:660px">';
+  h += '<div class="row wrap" style="margin-bottom:12px">';
+  h += '<span class="pill gray">'+open+' open</span>';
+  if(done) h += '<span class="pill green">'+done+' done</span>';
+  if(done) h += '<button class="btn sm ghost" onclick="clearDone()" style="color:var(--t3)">Clear done</button>';
+  h += '</div>';
+
+  if(!todos.length){
+    h += '<div class="empty"><div class="empty-ico">✓</div><div style="font-size:13px">No tasks yet. Hit <strong>+ Add Task</strong> to get started.</div></div>';
+    h += '</div>';
+    return h;
+  }
+
+  // Group by date
+  var groups = {};
+  todos.forEach(function(t){
+    var k = t.date||'No date';
+    if(!groups[k]) groups[k]=[];
+    groups[k].push(t);
+  });
+
+  var keys = Object.keys(groups).sort();
+  keys.forEach(function(date){
+    var label = date;
+    var od = false;
+    if(date==='No date') label='No date';
+    else if(date===td) label='Today';
+    else {
+      var diff = Math.round((new Date(date+'T00:00:00')-new Date(new Date().toDateString()))/86400000);
+      if(diff===1) label='Tomorrow';
+      else if(diff===-1) label='Yesterday';
+      else if(diff<0){ label='Overdue — '+_fmt(date); od=true; }
+      else label=_fmtFull(date);
+    }
+    h += '<div class="dg'+(od?' od':'')+'">'+label+'</div>';
+    groups[date].forEach(function(t){
+      h += '<div class="todo-item'+(t.done?' done':'')+'">';
+      h += '<div class="todo-cb'+(t.done?' chk':'')+'" onclick="toggleTodo(\''+t.id+'\')">'+(t.done?'✓':'')+'</div>';
+      h += '<div style="flex:1;cursor:pointer" onclick="toggleTodo(\''+t.id+'\')">';
+      h += '<div class="todo-text">'+_esc(t.text)+'</div>';
+      h += '<div class="todo-meta">';
+      if(t.workstream) h += '<span>'+_esc(t.workstream)+'</span>';
+      if(t.priority==='urgent') h += '<span class="pill red" style="font-size:9px">urgent</span>';
+      if(t.priority==='high')   h += '<span class="pill orange" style="font-size:9px">high</span>';
+      h += '</div></div>';
+      h += '<div class="todo-actions">';
+      h += '<button class="btn sm ghost" onclick="openTodoModal(\''+t.id+'\')">✏</button>';
+      h += '<button class="btn sm ghost" onclick="deleteTodo(\''+t.id+'\')">✕</button>';
+      h += '</div></div>';
+    });
+  });
+
+  h += '</div>';
+  return h;
+}
+
+function toggleTodo(id){
+  var todos = DB.todos();
+  for(var i=0;i<todos.length;i++){
+    if(todos[i].id===id){ todos[i].done=!todos[i].done; break; }
+  }
+  DB.save('todos',todos);
+  renderNav();
+  renderContent();
+}
+function deleteTodo(id){
+  DB.save('todos',DB.todos().filter(function(t){ return t.id!==id; }));
+  renderContent();
+}
+function clearDone(){
+  DB.save('todos',DB.todos().filter(function(t){ return !t.done; }));
+  renderContent();
+}
+
+function openTodoModal(editId){
+  var todos = DB.todos();
+  var t = editId ? todos.filter(function(x){ return x.id===editId; })[0] : null;
+  var ws = DB.settings().workstreams;
+  var wsOpts = '<option value="">— none —</option>';
+  ws.forEach(function(w){ wsOpts += '<option value="'+_esc(w)+'"'+(t&&t.workstream===w?' selected':'')+'>'+_esc(w)+'</option>'; });
+
+  showModal({
+    title: t?'Edit Task':'New Task',
+    body:
+      '<div class="field"><label>Task</label><textarea class="inp" id="m-txt" rows="2" placeholder="What needs to get done?">'+_esc(t?t.text:'')+'</textarea></div>'+
+      '<div class="g2">'+
+        '<div class="field"><label>Date</label><input class="inp" type="date" id="m-date" value="'+(t?t.date:_today())+'"/></div>'+
+        '<div class="field"><label>Priority</label><select class="inp" id="m-pri">'+
+          '<option value="normal"'+((!t||t.priority==='normal')?' selected':'')+'>Normal</option>'+
+          '<option value="high"'+(t&&t.priority==='high'?' selected':'')+'>High</option>'+
+          '<option value="urgent"'+(t&&t.priority==='urgent'?' selected':'')+'>Urgent</option>'+
+        '</select></div>'+
+      '</div>'+
+      '<div class="field"><label>Workstream</label><select class="inp" id="m-ws">'+wsOpts+'</select></div>'+
+      '<div class="field"><label>Notes</label><textarea class="inp" id="m-notes" rows="2" placeholder="Optional…">'+_esc(t?t.notes||'':'')+'</textarea></div>',
+    onSave: function(){
+      var txt = document.getElementById('m-txt').value.trim();
+      if(!txt){ alert('Task text is required.'); return; }
+      var obj = {
+        id:         editId||_uid(),
+        text:       txt,
+        date:       document.getElementById('m-date').value||_today(),
+        priority:   document.getElementById('m-pri').value,
+        workstream: document.getElementById('m-ws').value,
+        notes:      document.getElementById('m-notes').value.trim(),
+        done:       t?t.done:false,
+        createdAt:  t?t.createdAt:_now()
+      };
+      if(editId) DB.save('todos',todos.map(function(x){ return x.id===editId?obj:x; }));
+      else       DB.save('todos',[obj].concat(todos));
+      closeModal();
+      renderNav();
+      renderContent();
+    }
+  });
+}
+
+// ── MEETING NOTES ─────────────────────────────────────────
+var NOTE_SEC = [
+  {id:'agenda',    label:'Agenda / Topics',   ph:'What was covered…'},
+  {id:'decisions', label:'Key Decisions',      ph:'Decisions reached…'},
+  {id:'actions',   label:'Action Items',       ph:'SS — follow up on X by date…'},
+  {id:'blockers',  label:'Blockers / Risks',   ph:'What is blocked…'},
+  {id:'notes',     label:'Additional Notes',   ph:'Other context…'}
+];
+
+function buildNotes(){
+  var notes = DB.notes();
+  var q = '';
+  var qEl = document.getElementById('notes-q');
+  if(qEl) q = qEl.value.toLowerCase();
+  if(q) notes = notes.filter(function(n){
+    return n.title.toLowerCase().indexOf(q)>-1 || (n.agenda||'').toLowerCase().indexOf(q)>-1 || (n.actions||'').toLowerCase().indexOf(q)>-1;
+  });
+  notes = notes.slice().sort(function(a,b){ return b.date.localeCompare(a.date); });
+
+  if(!notes.length) return '<div class="empty" style="padding-top:80px"><div class="empty-ico">◎</div><div style="font-size:13px">No meeting notes yet.<br/>Hit <strong>+ New Note</strong> to get started.</div></div>';
+
+  var h = '<div style="max-width:780px">';
+  notes.forEach(function(n){
+    h += '<div class="note-card" onclick="viewNote(\''+n.id+'\')">';
+    h += '<div class="row" style="align-items:flex-start">';
+    h += '<div class="note-title" style="flex:1">'+_esc(n.title)+'</div>';
+    h += '<div class="row" style="flex-shrink:0" onclick="event.stopPropagation()">';
+    h += '<button class="btn sm ghost" onclick="openNoteModal(\''+n.id+'\')">✏</button>';
+    h += '<button class="btn sm ghost" onclick="deleteNote(\''+n.id+'\')">✕</button>';
+    h += '</div></div>';
+    h += '<div class="note-meta"><span>'+_fmt(n.date)+'</span>';
+    if(n.workstream) h += '<span class="pill gray">'+_esc(n.workstream)+'</span>';
+    if(n.attendees)  h += '<span>👥 '+_esc(n.attendees)+'</span>';
+    h += '</div>';
+    if(n.agenda)  h += '<div class="note-preview">'+_esc(n.agenda)+'</div>';
+    if(n.actions) h += '<div style="margin-top:5px;font-size:11.5px;color:var(--accent);font-weight:600">Actions: <span style="font-weight:400;color:var(--t2)">'+_esc(n.actions.split('\n')[0])+(n.actions.indexOf('\n')>-1?'…':'')+'</span></div>';
+    h += '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+function viewNote(id){
+  var note = DB.notes().filter(function(n){ return n.id===id; })[0];
+  if(!note) return;
+  var body = '<div class="note-meta" style="margin-bottom:14px"><span>'+_fmtFull(note.date)+'</span>';
+  if(note.workstream) body += '<span class="pill gray">'+_esc(note.workstream)+'</span>';
+  if(note.attendees)  body += '<span>👥 '+_esc(note.attendees)+'</span>';
+  body += '</div>';
+  NOTE_SEC.forEach(function(s){
+    if(note[s.id]) body += '<div style="margin-bottom:14px"><div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px">'+s.label+'</div><div style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap;background:var(--bg);border-radius:8px;padding:10px 12px">'+_esc(note[s.id])+'</div></div>';
+  });
+  showModal({ title:note.title, wide:true, body:body, saveLabel:'Edit', onSave:function(){ closeModal(); openNoteModal(id); } });
+}
+
+function deleteNote(id){
+  if(!confirm('Delete this note?')) return;
+  DB.save('notes',DB.notes().filter(function(n){ return n.id!==id; }));
+  renderContent();
+}
+
+function openNoteModal(editId){
+  var notes = DB.notes();
+  var n = editId ? notes.filter(function(x){ return x.id===editId; })[0] : null;
+  var ws = DB.settings().workstreams;
+  var wsOpts = '<option value="">— none —</option>';
+  ws.forEach(function(w){ wsOpts += '<option value="'+_esc(w)+'"'+(n&&n.workstream===w?' selected':'')+'>'+_esc(w)+'</option>'; });
+
+  var fields = '';
+  NOTE_SEC.forEach(function(s){
+    fields += '<div class="field"><label>'+s.label+'</label><textarea class="inp" id="m-n-'+s.id+'" rows="3" placeholder="'+_esc(s.ph)+'">'+_esc(n?n[s.id]||'':'')+'</textarea></div>';
+  });
+
+  showModal({
+    title: n?'Edit Note':'New Meeting Note',
+    wide: true,
+    body:
+      '<div class="g2">'+
+        '<div class="field"><label>Meeting Title</label><input class="inp" type="text" id="m-n-title" placeholder="e.g. ZM/SS Weekly Sync" value="'+_esc(n?n.title:'')+'"/></div>'+
+        '<div class="field"><label>Date</label><input class="inp" type="date" id="m-n-date" value="'+(n?n.date:_today())+'"/></div>'+
+      '</div>'+
+      '<div class="g2">'+
+        '<div class="field"><label>Workstream</label><select class="inp" id="m-n-ws">'+wsOpts+'</select></div>'+
+        '<div class="field"><label>Attendees</label><input class="inp" type="text" id="m-n-att" placeholder="SS, ZM, CZ…" value="'+_esc(n?n.attendees||'':'')+'"/></div>'+
+      '</div>'+
+      fields,
+    onSave: function(){
+      var title = document.getElementById('m-n-title').value.trim();
+      if(!title){ alert('Title is required.'); return; }
+      var obj = {
+        id:         editId||_uid(),
+        title:      title,
+        date:       document.getElementById('m-n-date').value||_today(),
+        workstream: document.getElementById('m-n-ws').value,
+        attendees:  document.getElementById('m-n-att').value.trim(),
+        createdAt:  n?n.createdAt:_now()
+      };
+      NOTE_SEC.forEach(function(s){ obj[s.id]=document.getElementById('m-n-'+s.id).value.trim(); });
+      if(editId) DB.save('notes',notes.map(function(x){ return x.id===editId?obj:x; }));
+      else       DB.save('notes',[obj].concat(notes));
+      closeModal();
+      renderContent();
+    }
+  });
+}
+
+// ── CARDS ────────────────────────────────────────────────
+var STATS = [
+  {id:'pending',    label:'Pending',     color:'var(--yellow)'},
+  {id:'inprogress', label:'In Progress', color:'var(--blue)'},
+  {id:'blocked',    label:'Blocked',     color:'var(--red)'},
+  {id:'done',       label:'Done',        color:'var(--green)'}
+];
+var PRIS = [
+  {id:'urgent', label:'Urgent', color:'var(--red)'},
+  {id:'high',   label:'High',   color:'var(--accent)'},
+  {id:'normal', label:'Normal', color:'var(--blue)'},
+  {id:'low',    label:'Low',    color:'var(--t3)'}
+];
+
+function getStat(id){ for(var i=0;i<STATS.length;i++) if(STATS[i].id===id) return STATS[i]; return STATS[0]; }
+function getPri(id){  for(var i=0;i<PRIS.length;i++)  if(PRIS[i].id===id)  return PRIS[i];  return PRIS[2]; }
+
+function buildCards(){
+  var allCards = DB.cards();
+  var q = '';
+  var qEl = document.getElementById('cards-q');
+  if(qEl) q = qEl.value.toLowerCase();
+  var cards = q ? allCards.filter(function(c){
+    return c.title.toLowerCase().indexOf(q)>-1 || (c.workstream||'').toLowerCase().indexOf(q)>-1;
+  }) : allCards;
+
+  if(!cards.length){
+    return '<div class="empty" style="padding-top:80px"><div class="empty-ico">▦</div><div style="font-size:13px">No cards yet.<br/>Hit <strong>+ New Card</strong> to create your first project card.</div></div>';
+  }
+
+  // Status summary pills
+  var h = '<div style="max-width:1060px">';
+  h += '<div class="row wrap" style="margin-bottom:16px">';
+  STATS.forEach(function(s){
+    var cnt = allCards.filter(function(c){ return c.status===s.id; }).length;
+    if(cnt) h += '<span class="pill gray">'+s.label+' <strong>'+cnt+'</strong></span>';
+  });
+  h += '</div>';
+
+  // Group by workstream
+  var groups = {};
+  var order  = [];
+  cards.forEach(function(c){
+    var k = c.workstream||'Other';
+    if(!groups[k]){ groups[k]=[]; order.push(k); }
+    groups[k].push(c);
+  });
+
+  order.forEach(function(ws){
+    h += '<div style="margin-bottom:22px">';
+    h += '<div style="font-size:10.5px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">'+_esc(ws)+'</div>';
+    h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:10px">';
+    groups[ws].forEach(function(c){
+      var st  = getStat(c.status);
+      var pri = getPri(c.priority);
+      var od  = _isOD(c.due);
+      var soon= _isSoon(c.due);
+      h += '<div class="pcard" onclick="openCardModal(\''+c.id+'\')">';
+      h += '<div class="bar" style="background:'+pri.color+'"></div>';
+      h += '<div class="row" style="align-items:flex-start">';
+      h += '<div class="pt" style="flex:1">'+_esc(c.title)+'</div>';
+      h += '<div class="pa" onclick="event.stopPropagation()">';
+      h += '<button class="btn sm ghost" title="Cycle status" onclick="cycleStatus(\''+c.id+'\')">↻</button>';
+      h += '<button class="btn sm ghost" onclick="deleteCard(\''+c.id+'\')">✕</button>';
+      h += '</div></div>';
+      h += '<div class="pm">';
+      h += '<span class="pill" style="background:'+st.color+'18;color:'+st.color+'">'+st.label+'</span>';
+      if(c.owner) h += '<span>👤 '+_esc(c.owner)+'</span>';
+      if(c.due)   h += '<span class="'+(od?'overdue':soon?'soon':'')+'">📅 '+_fmt(c.due)+'</span>';
+      if(c.jira)  h += '<span style="font-family:DM Mono,monospace;font-size:10.5px;color:var(--blue)">'+_esc(c.jira)+'</span>';
+      h += '</div>';
+      if(c.blockerNote&&c.status==='blocked') h += '<div style="font-size:11px;color:var(--red);margin-top:6px;padding:4px 8px;background:#fdf0ee;border-radius:6px">⛔ '+_esc(c.blockerNote)+'</div>';
+      h += '</div>';
+    });
+    h += '</div></div>';
+  });
+
+  h += '</div>';
+  return h;
+}
+
+function cycleStatus(id){
+  var cards = DB.cards();
+  var order = ['pending','inprogress','blocked','done'];
+  for(var i=0;i<cards.length;i++){
+    if(cards[i].id===id){
+      var idx = order.indexOf(cards[i].status);
+      cards[i].status = order[(idx+1)%order.length];
+      break;
+    }
+  }
+  DB.save('cards',cards);
+  renderNav();
+  renderContent();
+}
+function deleteCard(id){
+  if(!confirm('Delete this card?')) return;
+  DB.save('cards',DB.cards().filter(function(c){ return c.id!==id; }));
+  renderContent();
+}
+
+function openCardModal(editId){
+  var cards = DB.cards();
+  var c = editId ? cards.filter(function(x){ return x.id===editId; })[0] : null;
+  var ws = DB.settings().workstreams;
+  var wsOpts = '<option value="">— none —</option>';
+  ws.forEach(function(w){ wsOpts += '<option value="'+_esc(w)+'"'+(c&&c.workstream===w?' selected':'')+'>'+_esc(w)+'</option>'; });
+  var statOpts=''; STATS.forEach(function(s){ statOpts += '<option value="'+s.id+'"'+((c?c.status:'pending')===s.id?' selected':'')+'>'+s.label+'</option>'; });
+  var priOpts='';  PRIS.forEach(function(p){  priOpts  += '<option value="'+p.id+'"'+((c?c.priority:'normal')===p.id?' selected':'')+'>'+p.label+'</option>'; });
+
+  showModal({
+    title: c?'Edit Card':'New Card',
+    wide: true,
+    body:
+      '<div class="field"><label>Title</label><input class="inp" type="text" id="m-c-title" placeholder="What are you tracking?" value="'+_esc(c?c.title:'')+'"/></div>'+
+      '<div class="g2">'+
+        '<div class="field"><label>Workstream</label><select class="inp" id="m-c-ws">'+wsOpts+'</select></div>'+
+        '<div class="field"><label>Status</label><select class="inp" id="m-c-status">'+statOpts+'</select></div>'+
+      '</div>'+
+      '<div class="g2">'+
+        '<div class="field"><label>Priority</label><select class="inp" id="m-c-pri">'+priOpts+'</select></div>'+
+        '<div class="field"><label>Owner</label><input class="inp" type="text" id="m-c-owner" placeholder="SS, ZM…" value="'+_esc(c?c.owner||'':'')+'"/></div>'+
+      '</div>'+
+      '<div class="g2">'+
+        '<div class="field"><label>Due Date</label><input class="inp" type="date" id="m-c-due" value="'+(c?c.due||'':'')+'"/></div>'+
+        '<div class="field"><label>Jira Ticket</label><input class="inp" type="text" id="m-c-jira" placeholder="TDPGM-001" value="'+_esc(c?c.jira||'':'')+'"/></div>'+
+      '</div>'+
+      '<div class="field"><label>Description</label><textarea class="inp" id="m-c-desc" rows="3" placeholder="What is this about?">'+_esc(c?c.desc||'':'')+'</textarea></div>'+
+      '<div class="field"><label>Action Items</label><textarea class="inp" id="m-c-actions" rows="2" placeholder="SS — follow up on X by date…">'+_esc(c?c.actions||'':'')+'</textarea></div>'+
+      '<div class="field"><label>Blocker Note</label><textarea class="inp" id="m-c-blocker" rows="2" placeholder="What is blocking this?">'+_esc(c?c.blockerNote||'':'')+'</textarea></div>',
+    onSave: function(){
+      var title = document.getElementById('m-c-title').value.trim();
+      if(!title){ alert('Title is required.'); return; }
+      var obj = {
+        id:          editId||_uid(),
+        title:       title,
+        workstream:  document.getElementById('m-c-ws').value,
+        status:      document.getElementById('m-c-status').value,
+        priority:    document.getElementById('m-c-pri').value,
+        owner:       document.getElementById('m-c-owner').value.trim(),
+        due:         document.getElementById('m-c-due').value,
+        jira:        document.getElementById('m-c-jira').value.trim(),
+        desc:        document.getElementById('m-c-desc').value.trim(),
+        actions:     document.getElementById('m-c-actions').value.trim(),
+        blockerNote: document.getElementById('m-c-blocker').value.trim(),
+        createdAt:   c?c.createdAt:_now()
+      };
+      if(editId) DB.save('cards',cards.map(function(x){ return x.id===editId?obj:x; }));
+      else       DB.save('cards',[obj].concat(cards));
+      closeModal();
+      renderNav();
+      renderContent();
+    }
+  });
+}
+
+// ── CALENDAR ─────────────────────────────────────────────
+var calYear  = new Date().getFullYear();
+var calMonth = new Date().getMonth();
+
+function buildCalendar(){
+  var events = DB.events();
+  var DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var td     = _today();
+  var first  = new Date(calYear,calMonth,1).getDay();
+  var dim    = new Date(calYear,calMonth+1,0).getDate();
+  var diPrev = new Date(calYear,calMonth,0).getDate();
+  var total  = Math.ceil((first+dim)/7)*7;
+
+  var h = '<div style="max-width:980px">';
+  h += '<div class="row" style="margin-bottom:16px">';
+  h += '<button class="btn" onclick="calNav(-1)">‹</button>';
+  h += '<span style="font-family:Lora,serif;font-size:17px;font-weight:600;flex:1;text-align:center">'+MONTHS[calMonth]+' '+calYear+'</span>';
+  h += '<button class="btn" onclick="calNav(1)">›</button>';
+  h += '<button class="btn sm ghost" onclick="calToday()">Today</button></div>';
+
+  h += '<div class="g2" style="align-items:start;gap:20px">';
+
+  // Calendar grid
+  h += '<div>';
+  h += '<div class="cal-grid" style="margin-bottom:4px">';
+  DAYS.forEach(function(d){ h += '<div class="cal-dh">'+d+'</div>'; });
+  h += '</div><div class="cal-grid">';
+
+  var dayCount=1, nextCount=1;
+  for(var i=0;i<total;i++){
+    var d, om=false;
+    if(i<first){        d=diPrev-first+i+1; om=true; }
+    else if(dayCount>dim){ d=nextCount++; om=true; }
+    else { d=dayCount++; }
+    var ds = om ? '' : calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var isToday = ds===td;
+    var dayEvts = ds ? events.filter(function(e){ return e.date===ds; }) : [];
+    h += '<div class="cal-day'+(om?' om':'')+(isToday?' today':'')+'"'+(ds?' onclick="openEventModal(\'\',\''+ds+'\')"':'')+' style="cursor:'+(ds?'pointer':'default')+'">';
+    h += '<div class="cal-dn">'+d+'</div>';
+    dayEvts.slice(0,2).forEach(function(e){
+      h += '<div class="cal-ev'+(e.color?' '+e.color:'')+'">'+_esc(e.title)+'</div>';
+    });
+    if(dayEvts.length>2) h += '<div style="font-size:9px;color:var(--t3)">+'+( dayEvts.length-2)+' more</div>';
+    h += '</div>';
+  }
+  h += '</div></div>';
+
+  // Upcoming list
+  var upcoming = events.filter(function(e){ return e.date>=td; }).slice().sort(function(a,b){ return a.date.localeCompare(b.date); }).slice(0,10);
+  h += '<div>';
+  h += '<div style="font-size:10.5px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px">Upcoming</div>';
+  if(!upcoming.length){
+    h += '<div style="color:var(--t3);font-size:12.5px">No upcoming events</div>';
+  } else {
+    upcoming.forEach(function(e){
+      var dt = new Date(e.date+'T00:00:00');
+      h += '<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)">';
+      h += '<div style="text-align:center;min-width:36px;flex-shrink:0">';
+      h += '<div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase">'+dt.toLocaleDateString('en-US',{month:'short'})+'</div>';
+      h += '<div style="font-size:18px;font-weight:700;line-height:1">'+dt.getDate()+'</div>';
+      h += '</div>';
+      h += '<div style="flex:1"><div style="font-size:13px;font-weight:600">'+_esc(e.title)+'</div>';
+      if(e.time) h += '<div style="font-size:11px;color:var(--t3)">'+_esc(e.time)+'</div>';
+      if(e.notes) h += '<div style="font-size:11px;color:var(--t2);margin-top:1px">'+_esc(e.notes)+'</div>';
+      h += '</div>';
+      h += '<div class="row" style="flex-shrink:0">';
+      h += '<button class="btn sm ghost" onclick="openEventModal(\''+e.id+'\',\'\')">✏</button>';
+      h += '<button class="btn sm ghost" onclick="deleteEvent(\''+e.id+'\')">✕</button>';
+      h += '</div></div>';
+    });
+  }
+  h += '</div>';
+
+  h += '</div></div>';
+  return h;
+}
+
+function calNav(dir){
+  calMonth+=dir;
+  if(calMonth>11){ calMonth=0; calYear++; }
+  if(calMonth<0) { calMonth=11; calYear--; }
+  renderContent();
+}
+function calToday(){
+  calYear=new Date().getFullYear();
+  calMonth=new Date().getMonth();
+  renderContent();
+}
+function deleteEvent(id){
+  if(!confirm('Delete this event?')) return;
+  DB.save('events',DB.events().filter(function(e){ return e.id!==id; }));
+  renderContent();
+}
+
+function openEventModal(editId, prefill){
+  var events = DB.events();
+  var e = editId ? events.filter(function(x){ return x.id===editId; })[0] : null;
+  showModal({
+    title: e?'Edit Event':'New Event',
+    body:
+      '<div class="field"><label>Title</label><input class="inp" type="text" id="m-e-title" placeholder="Meeting, deadline, reminder…" value="'+_esc(e?e.title:'')+'"/></div>'+
+      '<div class="g2">'+
+        '<div class="field"><label>Date</label><input class="inp" type="date" id="m-e-date" value="'+(e?e.date:prefill||_today())+'"/></div>'+
+        '<div class="field"><label>Time (optional)</label><input class="inp" type="text" id="m-e-time" placeholder="10:00 AM" value="'+_esc(e?e.time||'':'')+'"/></div>'+
+      '</div>'+
+      '<div class="field"><label>Color</label><select class="inp" id="m-e-color">'+
+        '<option value="">Default</option>'+
+        '<option value="green"'+(e&&e.color==='green'?' selected':'')+'>Green</option>'+
+        '<option value="blue"'+(e&&e.color==='blue'?' selected':'')+'>Blue</option>'+
+        '<option value="purple"'+(e&&e.color==='purple'?' selected':'')+'>Purple</option>'+
+      '</select></div>'+
+      '<div class="field"><label>Notes</label><textarea class="inp" id="m-e-notes" rows="2" placeholder="Optional…">'+_esc(e?e.notes||'':'')+'</textarea></div>',
+    onSave: function(){
+      var title = document.getElementById('m-e-title').value.trim();
+      if(!title){ alert('Title is required.'); return; }
+      var obj = {
+        id:    editId||_uid(),
+        title: title,
+        date:  document.getElementById('m-e-date').value||_today(),
+        time:  document.getElementById('m-e-time').value.trim(),
+        color: document.getElementById('m-e-color').value,
+        notes: document.getElementById('m-e-notes').value.trim()
+      };
+      if(editId) DB.save('events',events.map(function(x){ return x.id===editId?obj:x; }));
+      else       DB.save('events',[obj].concat(events));
+      closeModal();
+      renderContent();
+    }
+  });
+}
+
+// ── MODAL ────────────────────────────────────────────────
+function showModal(opts){
+  var root = document.getElementById('modal-root');
+  root.innerHTML =
+    '<div class="overlay" id="modal-overlay" onclick="overlayClick(event)">'+
+    '<div class="modal'+(opts.wide?' wide':'')+'">'+
+    '<div class="modal-head"><h2>'+_esc(opts.title)+'</h2><button class="btn sm ghost" onclick="closeModal()">✕</button></div>'+
+    '<div class="modal-body">'+opts.body+'</div>'+
+    '<div class="modal-foot">'+
+      '<button class="btn" onclick="closeModal()">Cancel</button>'+
+      '<button class="btn primary" id="modal-save">'+(opts.saveLabel||'Save')+'</button>'+
+    '</div></div></div>';
+  document.getElementById('modal-save').onclick = opts.onSave;
+  setTimeout(function(){
+    var f = root.querySelector('input,textarea,select');
+    if(f) f.focus();
+  },60);
+}
+
+function closeModal(){
+  document.getElementById('modal-root').innerHTML='';
+}
+
+function overlayClick(e){
+  if(e.target.id==='modal-overlay') closeModal();
+}
+
+// ── KEYBOARD ─────────────────────────────────────────────
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape') closeModal();
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){
+    e.preventDefault();
+    if(currentView==='todo')     openTodoModal('');
+    else if(currentView==='notes')    openNoteModal('');
+    else if(currentView==='cards')    openCardModal('');
+    else if(currentView==='calendar') openEventModal('','');
+  }
+});
+
+// ── SIDEBAR TOGGLE ───────────────────────────────────────
+document.getElementById('sb-toggle').addEventListener('click',function(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
+
+// ── BOOT ─────────────────────────────────────────────────
+renderNav();
+renderTopbar();
+renderContent();
+</script>
+</body>
+</html>
