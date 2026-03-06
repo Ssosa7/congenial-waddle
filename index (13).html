@@ -1,0 +1,2776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Daily Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f5f0e8;--surface:#faf7f2;--card:#ffffff;
+  --border:#e8e0d0;--border2:#d4c9b5;
+  --text:#2c2416;--t2:#6b5d4f;--t3:#9e8f82;
+  --accent:#b85c38;--accent2:#d4754e;
+  --green:#4a7c59;--blue:#3d6b8e;--purple:#7c5c8e;
+  --yellow:#c4952a;--red:#c44a3a;
+  --radius:12px;--shadow:0 2px 12px rgba(44,36,22,.08);--shadow-lg:0 8px 32px rgba(44,36,22,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+button{cursor:pointer;font-family:inherit}
+input,textarea,select{font-family:inherit}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* LAYOUT */
+.shell{display:flex;height:100vh}
+.sidebar{width:215px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;transition:width .2s;overflow:hidden}
+.sidebar.collapsed{width:50px}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;gap:10px}
+.content{flex:1;overflow-y:auto;padding:20px}
+
+/* SIDEBAR */
+.sb-head{padding:14px 10px 10px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:9px}
+.sb-icon{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0}
+.sb-title-wrap{overflow:hidden}
+.sb-title{font-family:'Lora',serif;font-size:13px;font-weight:600;white-space:nowrap}
+.sb-sub{font-size:9px;color:var(--t3)}
+.sb-nav{flex:1;overflow-y:auto;padding:6px}
+.sb-section{font-size:9px;font-weight:700;color:var(--t3);letter-spacing:.08em;padding:10px 8px 3px;white-space:nowrap;overflow:hidden;text-transform:uppercase}
+.sb-btn{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;border:none;background:transparent;color:var(--t2);width:100%;text-align:left;font-size:12px;transition:all .12s;white-space:nowrap;overflow:hidden}
+.sb-btn:hover{background:var(--border);color:var(--text)}
+.sb-btn.active{background:var(--accent);color:#fff;font-weight:600}
+.sb-btn .ico{font-size:13px;flex-shrink:0;width:18px;text-align:center}
+.sb-btn .lbl{flex:1;overflow:hidden;text-overflow:ellipsis}
+.sb-btn .bdg{font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;background:var(--red);color:#fff;flex-shrink:0}
+.sb-btn.active .bdg{background:rgba(255,255,255,.3);color:#fff}
+.sb-foot{padding:8px 6px;border-top:1px solid var(--border);flex-shrink:0}
+.sb-collapse{width:100%;padding:6px;border:none;background:transparent;color:var(--t3);border-radius:6px;font-size:13px}
+.sb-collapse:hover{background:var(--border)}
+.sidebar.collapsed .lbl,.sidebar.collapsed .sb-section,.sidebar.collapsed .sb-title-wrap{display:none}
+
+/* TOPBAR */
+.page-title{font-family:'Lora',serif;font-size:17px;font-weight:600;flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--card);color:var(--t2);font-size:12.5px;font-weight:500;cursor:pointer;transition:all .12s;white-space:nowrap}
+.btn:hover{background:var(--border);color:var(--text)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent2);border-color:var(--accent2)}
+.btn.sm{padding:5px 10px;font-size:11.5px}
+.btn.ghost{background:transparent;border-color:transparent;padding-left:6px;padding-right:6px}
+.btn.ghost:hover{background:var(--border)}
+.btn.active-filter{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ml-auto{margin-left:auto}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-head{padding:12px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.card-body{padding:12px 16px}
+.card-title{font-family:'Lora',serif;font-size:14px;font-weight:600}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:1000px){.g3,.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
+/* FORMS */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:10.5px;font-weight:700;color:var(--t3);letter-spacing:.06em;margin-bottom:4px;text-transform:uppercase}
+.inp{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:8px 11px;color:var(--text);font-size:13px;outline:none;transition:border-color .12s}
+.inp:focus{border-color:var(--accent)}
+textarea.inp{resize:vertical;min-height:70px;line-height:1.6}
+select.inp{cursor:pointer}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(44,36,22,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;animation:fi .15s}
+.modal{background:var(--card);border-radius:16px;box-shadow:var(--shadow-lg);width:100%;max-width:540px;max-height:92vh;display:flex;flex-direction:column;animation:su .18s}
+.modal.wide{max-width:700px}
+.modal-head{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.modal-head h2{font-family:'Lora',serif;font-size:15px;font-weight:600;flex:1}
+.modal-body{padding:16px 20px;overflow-y:auto;flex:1}
+.modal-foot{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes su{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.pill.green{background:#e8f5ed;color:var(--green)}
+.pill.red{background:#fdf0ee;color:var(--red)}
+.pill.yellow{background:#fef8ec;color:var(--yellow)}
+.pill.blue{background:#eaf1f7;color:var(--blue)}
+.pill.purple{background:#f3eef7;color:var(--purple)}
+.pill.gray{background:var(--border);color:var(--t2)}
+.pill.orange{background:#fdf3ee;color:var(--accent)}
+
+/* TODO */
+.todo-item{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border-radius:9px;background:var(--card);border:1px solid var(--border);margin-bottom:5px;transition:border-color .12s}
+.todo-item:hover{border-color:var(--border2)}
+.todo-item.done{opacity:.5}
+.todo-item.done .todo-text{text-decoration:line-through;color:var(--t3)}
+.todo-cb{width:17px;height:17px;border-radius:5px;border:2px solid var(--border2);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;font-size:10px}
+.todo-cb.chk{background:var(--green);border-color:var(--green);color:#fff}
+.todo-text{flex:1;font-size:13px;line-height:1.5}
+.todo-meta{font-size:10.5px;color:var(--t3);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.todo-actions{display:flex;gap:3px;opacity:0;transition:opacity .1s;flex-shrink:0}
+.todo-item:hover .todo-actions{opacity:1}
+.dg{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.06em;padding:10px 0 4px;text-transform:uppercase}
+.dg.od{color:var(--red)}
+
+/* NOTES */
+.note-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:13px 16px;margin-bottom:9px;cursor:pointer;transition:all .12s}
+.note-card:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.note-title{font-family:'Lora',serif;font-size:13.5px;font-weight:600;margin-bottom:3px}
+.note-meta{font-size:11px;color:var(--t3);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.note-preview{font-size:12px;color:var(--t2);margin-top:6px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* PROJECT CARDS */
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:13px 14px;cursor:pointer;transition:all .12s;position:relative}
+.pcard:hover{border-color:var(--border2);box-shadow:var(--shadow);transform:translateY(-1px)}
+.pcard .bar{height:3px;border-radius:3px;margin-bottom:10px}
+.pcard .pt{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:5px}
+.pcard .pm{font-size:11px;color:var(--t3);display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.pcard .pa{position:absolute;top:9px;right:9px;display:flex;gap:3px;opacity:0;transition:opacity .1s}
+.pcard:hover .pa{opacity:1}
+
+/* CALENDAR */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dh{text-align:center;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.05em;padding:4px 0;text-transform:uppercase}
+.cal-day{min-height:80px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:5px 6px;cursor:pointer;transition:border-color .12s;overflow:hidden}
+.cal-day:hover{border-color:var(--border2)}
+.cal-day.today{border-color:var(--accent);border-width:2px}
+.cal-day.om{opacity:.4}
+.cal-dn{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:2px}
+.cal-day.today .cal-dn{color:var(--accent);font-weight:700}
+.cal-ev{font-size:9px;border-radius:3px;padding:1px 4px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
+.cal-week{display:grid;grid-template-columns:60px repeat(7,1fr);gap:3px;margin-bottom:3px}
+.cal-week-time{font-size:10px;color:var(--t3);text-align:right;padding-right:6px;padding-top:4px}
+.cal-week-cell{min-height:60px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:4px;overflow:hidden;cursor:pointer}
+.cal-week-cell:hover{border-color:var(--border2)}
+.cal-week-cell.today{border-color:var(--accent)}
+
+/* STATS */
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.stat-n{font-family:'Lora',serif;font-size:28px;font-weight:600;line-height:1}
+.stat-l{font-size:11px;color:var(--t3);margin-top:3px}
+
+/* EMPTY */
+.empty{text-align:center;padding:48px 20px;color:var(--t3)}
+.empty-ico{font-size:36px;margin-bottom:10px;opacity:.4}
+
+/* SEARCH */
+.sbar{display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:5px 10px;max-width:260px}
+.sbar input{border:none;background:transparent;outline:none;font-size:12.5px;color:var(--text);width:100%}
+.sbar input::placeholder{color:var(--t3)}
+
+/* TABLE */
+.tbl-wrap{overflow:auto;border-radius:var(--radius);border:1px solid var(--border)}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{text-align:left;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;padding:7px 10px;border-bottom:2px solid var(--border);background:var(--bg);white-space:nowrap}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tbody tr:hover td{background:var(--bg)}
+.tbl tbody tr:last-child td{border-bottom:none}
+
+/* MISC */
+.overdue{color:var(--red)!important}
+.soon{color:var(--yellow)!important}
+.row{display:flex;align-items:center;gap:8px}
+.row.wrap{flex-wrap:wrap}
+.mono{font-family:'DM Mono',monospace;font-size:11px}
+.section-label{font-size:10.5px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px}
+.divider{height:1px;background:var(--border);margin:14px 0}
+
+/* HELP TIPS */
+.help-tip{background:linear-gradient(135deg,#fef8f5 0%,#fdf3ee 100%);border:1px solid #e8d4c8;border-radius:12px;padding:13px 16px;margin-bottom:18px;position:relative}
+.help-tip-head{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.help-tip-icon{font-size:15px}
+.help-tip-title{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.03em;flex:1}
+.help-tip-toggle{font-size:11px;color:var(--t3);transition:transform .15s}
+.help-tip-toggle.open{transform:rotate(180deg)}
+.help-tip-body{margin-top:10px;display:none}
+.help-tip-body.visible{display:block}
+.help-tip-body ul{padding-left:16px;margin:0}
+.help-tip-body li{font-size:12px;color:var(--t2);line-height:1.8;margin-bottom:1px}
+.help-tip-body li strong{color:var(--text)}
+.help-tip-body .tip-shortcut{display:inline-block;background:var(--border);border-radius:4px;padding:1px 6px;font-family:'DM Mono',monospace;font-size:10px;color:var(--t2);margin:0 2px}
+.help-tip-body .tip-section{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin:8px 0 4px}
+
+/* QUICK CAPTURE FLOAT */
+.qc-float{position:fixed;bottom:24px;right:24px;z-index:400;width:48px;height:48px;background:var(--accent);border-radius:50%;border:none;color:#fff;font-size:22px;box-shadow:var(--shadow-lg);transition:transform .15s;display:flex;align-items:center;justify-content:center}
+.qc-float:hover{transform:scale(1.1);background:var(--accent2)}
+
+/* KANBAN */
+.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start}
+.kanban-col{background:var(--bg);border-radius:var(--radius);padding:10px}
+.kanban-col-title{font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.kanban-card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:all .12s}
+.kanban-card:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+
+/* PIPELINE */
+.pipeline{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px}
+.pipe-col{background:var(--bg);border-radius:10px;padding:8px}
+.pipe-col-title{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;text-align:center}
+.pipe-item{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 9px;margin-bottom:5px;font-size:11.5px;cursor:pointer;transition:all .12s}
+.pipe-item:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+
+/* EOD */
+.eod-card{background:linear-gradient(135deg,#faf7f2 0%,#f5f0e8 100%);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:560px;margin:0 auto}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px}
+.tab{padding:8px 16px;border:none;background:transparent;color:var(--t3);font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .12s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
+/* WS COLORS */
+.ws-SQR{background:#b85c38}
+.ws-NSS{background:#3d6b8e}
+.ws-SPS{background:#4a7c59}
+.ws-Insight{background:#7c5c8e}
+.ws-Accountability{background:#c4952a}
+.ws-ISA{background:#c44a3a}
+.ws-OPE{background:#5c8e6b}
+.ws-CCR{background:#8e5c3d}
+.ws-PPR{background:#3d5c8e}
+.ws-Other{background:#9e8f82}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <div class="sb-icon">⬡</div>
+      <div class="sb-title-wrap">
+        <div class="sb-title">Daily Hub</div>
+        <div class="sb-sub">Salma's workspace</div>
+      </div>
+    </div>
+    <div class="sb-nav" id="sb-nav"></div>
+    <div class="sb-foot">
+      <button class="sb-collapse" id="sb-toggle">⇄</button>
+      <button class="btn ghost" onclick="setJiraBase()" style="width:100%;font-size:10px;color:var(--t3);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="Set Jira base URL">⚙ Jira URL</button>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="page-title" id="page-title"></span>
+      <div id="topbar-actions" class="row"></div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<button class="qc-float" id="qc-btn" title="Quick Capture">+</button>
+<div id="modal-root"></div>
+
+<script>
+// =============================================================
+//  DAILY HUB  |  Full build  |  vanilla JS
+// =============================================================
+
+// ── UTILS ─────────────────────────────────────────────────
+var _today=function(){ return new Date().toISOString().split('T')[0]; };
+var _now=function(){ return new Date().toISOString(); };
+var _uid=function(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); };
+var _fmt=function(d){ if(!d) return ''; return new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}); };
+var _fmtFull=function(d){ if(!d) return ''; return new Date(d+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); };
+var _isOD=function(d){ return d && new Date(d+'T00:00:00')<new Date(new Date().toDateString()); };
+var _isSoon=function(d){ if(!d) return false; var diff=(new Date(d+'T00:00:00')-new Date(new Date().toDateString()))/86400000; return diff>=0&&diff<=3; };
+var _esc=function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+var _lsGet=function(k,fb){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):fb; }catch(e){ return fb; } };
+var _lsSave=function(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
+var _daysAgo=function(iso){ if(!iso) return null; return Math.floor((new Date()-new Date(iso))/86400000); };
+var _daysUntil=function(d){ if(!d) return null; return Math.round((new Date(d+'T00:00:00')-new Date(new Date().toDateString()))/86400000); };
+
+// ── WORKSTREAM COLORS ─────────────────────────────────────
+var WS_COLORS={
+  'SQR':'#b85c38','NSS':'#3d6b8e','SPS':'#4a7c59','Insight':'#7c5c8e',
+  'Accountability':'#c4952a','ISA':'#c44a3a','OPE':'#5c8e6b',
+  'OSP Ops':'#8e7c5c','CCR':'#8e5c3d','PPR':'#3d5c8e','Other':'#9e8f82'
+};
+function wsColor(ws){ return WS_COLORS[ws]||'#9e8f82'; }
+
+// ── DATA ──────────────────────────────────────────────────
+var DB={
+  todos:       function(){ return _lsGet('dh4-todos',[]); },
+  notes:       function(){ return _lsGet('dh4-notes',[]); },
+  cards:       function(){ return _lsGet('dh4-cards',[]); },
+  events:      function(){ return _lsGet('dh4-events',[]); },
+  tickets:     function(){ return _lsGet('dh4-tickets',[]); },
+  deliverables:function(){ return _lsGet('dh4-deliverables',[]); },
+  decisions:   function(){ return _lsGet('dh4-decisions',[]); },
+  stakeholders:function(){ return _lsGet('dh4-stakeholders',[]); },
+  comms:       function(){ return _lsGet('dh4-comms',[]); },
+  releases:    function(){ return _lsGet('dh4-releases',[]); },
+  eod:         function(){ return _lsGet('dh4-eod',[]); },
+  settings:    function(){ return _lsGet('dh4-settings',{
+    workstreams:['SQR','NSS','SPS','Insight','Accountability','ISA','OPE','OSP Ops','CCR','PPR','Other'],
+    functions:['Project Management','Management','Engagement','Communication','Operations']
+  }); },
+  save:function(key,data){ _lsSave('dh4-'+key,data); }
+};
+
+// ── NAV STRUCTURE ─────────────────────────────────────────
+var NAV=[
+  {section:'Overview'},
+  {id:'dashboard', label:'Dashboard',     icon:'◈'},
+  {id:'inbox',     label:'Action Inbox',  icon:'⊠'},
+  {section:'Planning'},
+  {id:'deliverables',label:'Deliverables', icon:'◫'},
+  {id:'releases',  label:'Releases',      icon:'⬡'},
+  {id:'calendar',  label:'Calendar',      icon:'⊡'},
+  {section:'Daily Work'},
+  {id:'todo',      label:'To-Do',          icon:'✓'},
+  {id:'cards',     label:'Cards',          icon:'▦'},
+  {id:'notes',     label:'Meeting Notes',  icon:'◎'},
+  {section:'Tracking'},
+  {id:'zendesk',   label:'Zendesk',        icon:'🎫'},
+  {id:'comms',     label:'Comms',          icon:'✉'},
+  {id:'decisions', label:'Decisions',      icon:'⊕'},
+  {section:'People'},
+  {id:'stakeholders',label:'Stakeholders', icon:'◉'},
+  {section:'Reflection'},
+  {id:'eod',       label:'End of Day',     icon:'◑'},
+  {id:'snapshot',  label:'Weekly Snapshot',icon:'◐'},
+  {id:'learning',  label:'Learning Log',   icon:'⟡'},
+  {section:'Views'},
+  {id:'workload',  label:'My Workload',    icon:'◧'},
+];
+
+var currentView='dashboard';
+
+function navigate(id){
+  currentView=id;
+  renderNav();
+  renderTopbar();
+  renderContent();
+}
+
+function getBadge(id){
+  var todos=DB.todos(); var cards=DB.cards(); var tickets=DB.tickets();
+  if(id==='todo')    return todos.filter(function(t){ return !t.done&&t.date<=_today(); }).length||'';
+  if(id==='cards')   return cards.filter(function(c){ return c.status==='blocked'; }).length||'';
+  if(id==='zendesk') return tickets.filter(function(t){ return t.status==='open'; }).length||'';
+  if(id==='inbox'){
+    var ai=buildActionItems();
+    return ai.filter(function(a){ return !a.done; }).length||'';
+  }
+  return '';
+}
+
+function renderNav(){
+  var h='';
+  for(var i=0;i<NAV.length;i++){
+    var item=NAV[i];
+    if(item.section){ h+='<div class="sb-section">'+item.section+'</div>'; continue; }
+    var badge=getBadge(item.id);
+    h+='<button class="sb-btn'+(currentView===item.id?' active':'')+'" onclick="navigate(\''+item.id+'\')">';
+    h+='<span class="ico">'+item.icon+'</span>';
+    h+='<span class="lbl">'+_esc(item.label)+'</span>';
+    if(badge) h+='<span class="bdg">'+badge+'</span>';
+    h+='</button>';
+  }
+  document.getElementById('sb-nav').innerHTML=h;
+}
+
+// ── TOPBAR ────────────────────────────────────────────────
+var VIEW_TITLES={
+  dashboard:'Dashboard',inbox:'Action Inbox',deliverables:'Deliverables',
+  releases:'Release Tracker',calendar:'Calendar',todo:'To-Do',
+  cards:'Cards',notes:'Meeting Notes',zendesk:'Zendesk',
+  comms:'Comms Tracker',decisions:'Decision Log',stakeholders:'Stakeholders',
+  eod:'End of Day',snapshot:'Weekly Snapshot',learning:'Learning Log',workload:'My Workload'
+};
+
+function renderTopbar(){
+  document.getElementById('page-title').textContent=VIEW_TITLES[currentView]||currentView;
+  var a=document.getElementById('topbar-actions');
+  a.innerHTML='';
+  if(currentView==='todo'){
+    a.innerHTML='<button class="btn primary" onclick="openTodoModal(\'\')">+ Add Task</button>';
+  } else if(currentView==='notes'){
+    a.innerHTML='<div class="sbar"><span style="color:var(--t3)">🔍</span><input type="text" id="notes-q" placeholder="Search…" oninput="renderContent()"/></div><button class="btn primary" onclick="openNoteModal(\'\')">+ New Note</button>';
+  } else if(currentView==='cards'){
+    a.innerHTML='<div class="sbar"><span style="color:var(--t3)">🔍</span><input type="text" id="cards-q" placeholder="Search…" oninput="renderContent()"/></div><button class="btn sm ghost" onclick="toggleCardView()">⊞ View</button><button class="btn primary" onclick="openCardModal(\'\')">+ New Card</button>';
+  } else if(currentView==='calendar'){
+    a.innerHTML='<button class="btn sm ghost" onclick="calToggleView()">⊡ '+( calViewMode==='month'?'Week':'Month')+'</button><button class="btn primary" onclick="openEventModal(\'\',\'\')">+ Add Event</button>';
+  } else if(currentView==='zendesk'){
+    a.innerHTML='<div class="sbar"><span style="color:var(--t3)">🔍</span><input type="text" id="zendesk-q" placeholder="Search…" oninput="renderContent()"/></div><button class="btn primary" onclick="openTicketModal(\'\')">+ New Ticket</button>';
+  } else if(currentView==='deliverables'){
+    a.innerHTML='<div class="sbar"><span style="color:var(--t3)">🔍</span><input type="text" id="del-q" placeholder="Search…" oninput="renderContent()"/></div><button class="btn primary" onclick="openDelivModal(\'\')">+ Add Deliverable</button>';
+  } else if(currentView==='releases'){
+    a.innerHTML='<button class="btn primary" onclick="openReleaseModal(\'\')">+ New Release</button>';
+  } else if(currentView==='comms'){
+    a.innerHTML='<div class="sbar"><span style="color:var(--t3)">🔍</span><input type="text" id="comms-q" placeholder="Search…" oninput="renderContent()"/></div><button class="btn primary" onclick="openCommsModal(\'\')">+ New Comms</button>';
+  } else if(currentView==='decisions'){
+    a.innerHTML='<button class="btn primary" onclick="openDecisionModal(\'\')">+ Log Decision</button>';
+  } else if(currentView==='stakeholders'){
+    a.innerHTML='<button class="btn primary" onclick="openStakeholderModal(\'\')">+ Add Stakeholder</button>';
+  } else if(currentView==='eod'){
+    a.innerHTML='<button class="btn primary" onclick="openEodModal()">+ Log Today</button>';
+  } else if(currentView==='snapshot'){
+    a.innerHTML='<button class="btn primary" onclick="generateSnapshot()">Generate This Week</button>';
+  } else if(currentView==='learning'){
+    a.innerHTML='<button class="btn primary" onclick="openLearningModal(\'\')">+ Log Learning</button>';
+  } else if(currentView==='workload'){
+    a.innerHTML='<span style="font-size:11.5px;color:var(--t3)">Everything open, by week</span>';
+  }
+}
+
+// ── CONTENT ROUTER ────────────────────────────────────────
+function renderContent(){
+  var el=document.getElementById('content');
+  if(currentView==='dashboard')    el.innerHTML=buildDashboard();
+  else if(currentView==='inbox')        el.innerHTML=buildInbox();
+  else if(currentView==='deliverables') el.innerHTML=buildDeliverables();
+  else if(currentView==='releases')     el.innerHTML=buildReleases();
+  else if(currentView==='calendar')     el.innerHTML=buildCalendar();
+  else if(currentView==='todo')         el.innerHTML=buildTodo();
+  else if(currentView==='cards')        el.innerHTML=buildCards();
+  else if(currentView==='notes')        el.innerHTML=buildNotes();
+  else if(currentView==='zendesk')      el.innerHTML=buildZendesk();
+  else if(currentView==='comms')        el.innerHTML=buildComms();
+  else if(currentView==='decisions')    el.innerHTML=buildDecisions();
+  else if(currentView==='stakeholders') el.innerHTML=buildStakeholders();
+  else if(currentView==='eod')          el.innerHTML=buildEod();
+  else if(currentView==='snapshot')     el.innerHTML=buildSnapshot();
+  else if(currentView==='learning')     el.innerHTML=buildLearning();
+  else if(currentView==='workload')     el.innerHTML=buildWorkload();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────
+function buildDashboard(){
+  var h2=renderHelpTip('dashboard');
+  var todos=DB.todos(); var cards=DB.cards(); var notes=DB.notes();
+  var events=DB.events(); var deliverables=DB.deliverables();
+  var td=_today();
+  var hr=new Date().getHours();
+  var greet=hr<12?'Good morning ☀️':hr<17?'Good afternoon 👋':'Good evening 🌙';
+
+  var dueToday=todos.filter(function(t){ return !t.done&&t.date<=td; });
+  var blocked=cards.filter(function(c){ return c.status==='blocked'; });
+  var todayEvts=events.filter(function(e){ return e.date===td; }).sort(function(a,b){ return (a.time||'').localeCompare(b.time||''); });
+  var urgDel=deliverables.filter(function(d){ return d.phase!=='done'&&d.phase!=='sent'&&_isSoon(d.dueDate); });
+  var recentNotes=notes.slice().sort(function(a,b){ return b.date.localeCompare(a.date); }).slice(0,3);
+  var ai=buildActionItems().filter(function(a){ return !a.done; });
+
+  var h=h2+'<div style="max-width:1060px">';
+
+  // Greeting + date
+  h+='<div style="margin-bottom:18px">';
+  h+='<div style="font-family:Lora,serif;font-size:22px;font-weight:600">'+greet+'</div>';
+  h+='<div style="font-size:12.5px;color:var(--t3);margin-top:2px">'+_fmtFull(td)+'</div>';
+  h+='</div>';
+
+  // Alerts nudges
+  h+=buildAlerts();
+
+  // Stats
+  h+='<div class="g4" style="margin-bottom:18px">';
+  h+='<div class="stat"><div class="stat-n">'+dueToday.length+'</div><div class="stat-l">Due today</div>'+(dueToday.length?'<button class="btn sm ghost" style="margin-top:8px;padding-left:0;color:var(--accent)" onclick="navigate(\'todo\')">View →</button>':'')+'</div>';
+  h+='<div class="stat"><div class="stat-n">'+ai.length+'</div><div class="stat-l">Open action items</div>'+(ai.length?'<button class="btn sm ghost" style="margin-top:8px;padding-left:0;color:var(--accent)" onclick="navigate(\'inbox\')">View →</button>':'')+'</div>';
+  h+='<div class="stat"><div class="stat-n">'+urgDel.length+'</div><div class="stat-l">Deliverables due soon</div>'+(urgDel.length?'<button class="btn sm ghost" style="margin-top:8px;padding-left:0;color:var(--accent)" onclick="navigate(\'deliverables\')">View →</button>':'')+'</div>';
+  h+='<div class="stat'+(blocked.length?'" style="border-color:var(--red)':'')+'" ><div class="stat-n" style="'+(blocked.length?'color:var(--red)':'')+'">'+blocked.length+'</div><div class="stat-l">Blocked cards</div>'+(blocked.length?'<button class="btn sm ghost" style="margin-top:8px;padding-left:0;color:var(--red)" onclick="navigate(\'cards\')">View →</button>':'')+'</div>';
+  h+='</div>';
+
+  // Two col
+  h+='<div class="g2" style="margin-bottom:16px">';
+
+  // Today tasks
+  h+='<div class="card"><div class="card-head"><span>✓</span><span class="card-title">Today\'s Tasks</span><button class="btn sm ghost ml-auto" onclick="navigate(\'todo\')">All →</button></div>';
+  h+='<div class="card-body" style="padding:8px 14px">';
+  if(!dueToday.length) h+='<div class="empty" style="padding:16px 0"><div class="empty-ico">🎉</div><div style="font-size:12px">Nothing due today!</div></div>';
+  else dueToday.slice(0,6).forEach(function(t){
+    h+='<div class="todo-item" style="cursor:pointer" onclick="toggleTodo(\''+t.id+'\')">';
+    h+='<div class="todo-cb'+(t.done?' chk':'')+'">'+( t.done?'✓':'')+'</div>';
+    h+='<div style="flex:1"><div class="todo-text">'+_esc(t.text)+'</div>';
+    if(t.workstream) h+='<div class="todo-meta" style="margin-top:1px"><span style="color:'+wsColor(t.workstream)+'">'+_esc(t.workstream)+'</span></div>';
+    h+='</div></div>';
+  });
+  h+='</div></div>';
+
+  // Today's meetings
+  h+='<div class="card"><div class="card-head"><span>⊡</span><span class="card-title">Today\'s Meetings</span><button class="btn sm ghost ml-auto" onclick="navigate(\'calendar\')">Calendar →</button></div>';
+  h+='<div class="card-body" style="padding:8px 14px">';
+  if(!todayEvts.length) h+='<div style="color:var(--t3);font-size:12.5px;padding:8px 0">No meetings today</div>';
+  else todayEvts.forEach(function(e){
+    h+='<div style="padding:8px 0;border-bottom:1px solid var(--border)">';
+    h+='<div class="row" style="margin-bottom:4px">';
+    if(e.time) h+='<span class="pill blue">'+_esc(e.time)+'</span>';
+    h+='<span style="font-size:13px;font-weight:600">'+_esc(e.title)+'</span>';
+    if(e.workstream) h+='<span class="pill" style="background:'+wsColor(e.workstream)+'18;color:'+wsColor(e.workstream)+'">'+_esc(e.workstream)+'</span>';
+    h+='</div>';
+    if(e.prepNotes) h+='<div style="font-size:11.5px;color:var(--t2);padding:5px 8px;background:var(--bg);border-radius:6px;margin-top:3px">📋 '+_esc(e.prepNotes)+'</div>';
+    // Related tasks due today
+    if(e.workstream){
+      var relTasks=todos.filter(function(t){ return !t.done&&t.workstream===e.workstream&&t.date===td; });
+      if(relTasks.length) h+='<div style="font-size:11px;color:var(--accent);margin-top:4px">'+relTasks.length+' task'+(relTasks.length>1?'s':'')+' due today for '+_esc(e.workstream)+'</div>';
+      // Last meeting note actions
+      var lastNote=notes.filter(function(n){ return n.workstream===e.workstream&&n.actions; }).sort(function(a,b){ return b.date.localeCompare(a.date); })[0];
+      if(lastNote&&lastNote.actions) h+='<div style="font-size:11px;color:var(--t3);margin-top:2px">Last meeting actions: '+_esc(lastNote.actions.split('\n')[0].slice(0,60))+'…</div>';
+    }
+    if(e.attendees) h+='<div style="font-size:11px;color:var(--t3);margin-top:2px">👥 '+_esc(e.attendees)+'</div>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+
+  h+='</div>';
+
+  // Bottom row: deliverables due soon + recent notes
+  h+='<div class="g2">';
+
+  // Deliverables due soon
+  h+='<div class="card"><div class="card-head"><span>◫</span><span class="card-title">Deliverables Due Soon</span><button class="btn sm ghost ml-auto" onclick="navigate(\'deliverables\')">All →</button></div>';
+  h+='<div class="card-body" style="padding:8px 14px">';
+  var upDel=deliverables.filter(function(d){ return d.phase!=='done'&&d.phase!=='sent'; }).sort(function(a,b){ return (a.dueDate||'9').localeCompare(b.dueDate||'9'); }).slice(0,5);
+  if(!upDel.length) h+='<div style="color:var(--t3);font-size:12.5px;padding:6px 0">No upcoming deliverables</div>';
+  else upDel.forEach(function(d){
+    var du=_daysUntil(d.dueDate);
+    var dc=du===null?'':du<0?'overdue':du<=3?'soon':'';
+    h+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">';
+    h+='<div style="width:4px;height:28px;border-radius:3px;background:'+wsColor(d.workstream||'Other')+';flex-shrink:0"></div>';
+    h+='<div style="flex:1"><div style="font-size:12.5px;font-weight:600">'+_esc(d.title)+'</div>';
+    h+='<div style="font-size:11px;color:var(--t3)">'+_esc(d.workstream||'')+(d.type?' · '+_esc(d.type):'')+'</div></div>';
+    if(d.dueDate) h+='<div style="font-size:11px;font-weight:600" class="'+dc+'">'+_fmt(d.dueDate)+'</div>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+
+  // Recent notes
+  h+='<div class="card"><div class="card-head"><span>◎</span><span class="card-title">Recent Notes</span><button class="btn sm ghost ml-auto" onclick="navigate(\'notes\')">All →</button></div>';
+  h+='<div class="card-body" style="padding:8px 14px">';
+  if(!recentNotes.length) h+='<div style="color:var(--t3);font-size:12.5px;padding:6px 0">No notes yet</div>';
+  else recentNotes.forEach(function(n){
+    h+='<div style="padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="viewNote(\''+n.id+'\')">';
+    h+='<div style="font-size:12.5px;font-weight:600">'+_esc(n.title)+'</div>';
+    h+='<div style="font-size:11px;color:var(--t3)">'+_fmt(n.date)+(n.workstream?' · <span style="color:'+wsColor(n.workstream)+'">'+_esc(n.workstream)+'</span>':'')+'</div>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+
+  h+='</div>';
+
+  // Blocked banner
+  if(blocked.length){
+    h+='<div class="card" style="margin-top:16px;border-color:var(--red)">';
+    h+='<div class="card-head" style="background:#fdf0ee;border-radius:var(--radius) var(--radius) 0 0"><span>⛔</span><span class="card-title" style="color:var(--red)">Blocked ('+blocked.length+')</span><button class="btn sm ghost ml-auto" onclick="navigate(\'cards\')">View all →</button></div>';
+    h+='<div class="card-body" style="padding:8px 14px">';
+    blocked.forEach(function(c){
+      h+='<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border)">';
+      if(c.workstream) h+='<span class="pill" style="background:'+wsColor(c.workstream)+'18;color:'+wsColor(c.workstream)+'">'+_esc(c.workstream)+'</span>';
+      h+='<span style="font-size:12.5px;flex:1">'+_esc(c.title)+'</span>';
+      if(c.blockerNote) h+='<span style="font-size:11px;color:var(--t3)">'+_esc(c.blockerNote)+'</span>';
+      h+='<button class="btn sm ghost" onclick="openCardModal(\''+c.id+'\')">Edit</button></div>';
+    });
+    h+='</div></div>';
+  }
+
+  h+='</div>';
+  return h;
+}
+
+// ── ACTION INBOX ──────────────────────────────────────────
+function buildActionItems(){
+  var items=[];
+  var notes=DB.notes();
+  var cards=DB.cards();
+  var tickets=DB.tickets();
+  var deliverables=DB.deliverables();
+
+  // From meeting notes
+  notes.forEach(function(n){
+    if(!n.actions) return;
+    var lines=n.actions.split('\n').filter(function(l){ return l.trim(); });
+    lines.forEach(function(line){
+      items.push({id:'note-'+n.id+'-'+_uid(),source:'note',sourceId:n.id,
+        text:line.trim(),workstream:n.workstream||'',date:n.date,
+        sourceLabel:'Meeting: '+n.title,done:false});
+    });
+  });
+
+  // From cards
+  cards.forEach(function(c){
+    if(!c.actions) return;
+    var lines=c.actions.split('\n').filter(function(l){ return l.trim(); });
+    lines.forEach(function(line){
+      items.push({id:'card-'+c.id+'-'+_uid(),source:'card',sourceId:c.id,
+        text:line.trim(),workstream:c.workstream||'',date:c.due||'',
+        sourceLabel:'Card: '+c.title,done:false});
+    });
+  });
+
+  // Zendesk waiting on me
+  tickets.forEach(function(t){
+    if(t.myAction&&(t.status==='open'||t.status==='waiting')){
+      items.push({id:'ticket-'+t.id,source:'ticket',sourceId:t.id,
+        text:t.myAction,workstream:'',date:'',
+        sourceLabel:'Ticket #'+(t.ticketId||t.id),done:false});
+    }
+  });
+
+  // Deliverables not started
+  deliverables.forEach(function(d){
+    if(d.phase==='not started'){
+      items.push({id:'del-'+d.id,source:'deliverable',sourceId:d.id,
+        text:'Start: '+d.title,workstream:d.workstream||'',date:d.dueDate||'',
+        sourceLabel:'Deliverable',done:false});
+    }
+  });
+
+  return items.sort(function(a,b){ return (a.date||'9').localeCompare(b.date||'9'); });
+}
+
+function buildInbox(){
+  var h2=renderHelpTip('inbox');
+  var items=buildActionItems();
+  var open=items.filter(function(a){ return !a.done; });
+
+  var h=h2+'<div style="max-width:700px">';
+  h+='<div style="font-size:12.5px;color:var(--t3);margin-bottom:14px">Everything that needs your attention — pulled from meeting notes, cards, Zendesk, and deliverables.</div>';
+
+  if(!open.length){
+    h+='<div class="empty"><div class="empty-ico">✅</div><div style="font-size:13px">No open action items. You\'re all caught up.</div></div>';
+    h+='</div>'; return h;
+  }
+
+  open.forEach(function(item){
+    var dc=_isOD(item.date)?'overdue':_isSoon(item.date)?'soon':'';
+    h+='<div class="todo-item">';
+    h+='<div class="todo-cb" onclick="aiDone(\''+item.sourceId+'\',\''+item.source+'\')"></div>';
+    h+='<div style="flex:1">';
+    h+='<div class="todo-text">'+_esc(item.text)+'</div>';
+    h+='<div class="todo-meta">';
+    h+='<span style="color:var(--t3)">'+_esc(item.sourceLabel)+'</span>';
+    if(item.workstream) h+='<span style="color:'+wsColor(item.workstream)+'">'+_esc(item.workstream)+'</span>';
+    if(item.date) h+='<span class="'+dc+'">'+_fmt(item.date)+'</span>';
+    h+='</div></div>';
+    h+='<button class="btn sm ghost" onclick="goToSource(\''+item.source+'\',\''+item.sourceId+'\')">View →</button>';
+    h+='</div>';
+  });
+
+  h+='</div>';
+  return h;
+}
+
+function aiDone(sourceId, source){
+  if(source==='note'){
+    navigate('notes');
+  } else if(source==='card'){
+    openCardModal(sourceId);
+  } else if(source==='ticket'){
+    openTicketModal(sourceId);
+  } else if(source==='deliverable'){
+    openDelivModal(sourceId);
+  }
+}
+
+function goToSource(source, sourceId){
+  if(source==='note')        { currentView='notes'; renderNav(); renderTopbar(); renderContent(); }
+  else if(source==='card')   { currentView='cards'; renderNav(); renderTopbar(); renderContent(); }
+  else if(source==='ticket') { currentView='zendesk'; renderNav(); renderTopbar(); renderContent(); }
+  else if(source==='deliverable'){ currentView='deliverables'; renderNav(); renderTopbar(); renderContent(); }
+}
+
+// ── DELIVERABLES ──────────────────────────────────────────
+var DEL_TYPES=['Draft','Review','Send','Submit','Follow-up','Meeting'];
+var DEL_PHASES=['not started','in progress','in review','sent','done'];
+var DEL_PRIS=['urgent','high','normal','low'];
+
+function buildDeliverables(){
+  var h2=renderHelpTip('deliverables');
+  var all=DB.deliverables();
+  var q=''; var qEl=document.getElementById('del-q');
+  if(qEl) q=qEl.value.toLowerCase();
+  var dels=q?all.filter(function(d){ return d.title.toLowerCase().indexOf(q)>-1||(d.workstream||'').toLowerCase().indexOf(q)>-1; }):all;
+
+  var open=all.filter(function(d){ return d.phase!=='done'&&d.phase!=='sent'; });
+  var od=open.filter(function(d){ return _isOD(d.dueDate); });
+  var soon=open.filter(function(d){ return _isSoon(d.dueDate)&&!_isOD(d.dueDate); });
+
+  var h=h2+'<div style="max-width:1060px">';
+
+  // Stats
+  h+='<div class="g4" style="margin-bottom:16px">';
+  h+='<div class="stat"><div class="stat-n">'+open.length+'</div><div class="stat-l">Open</div></div>';
+  h+='<div class="stat" style="'+(od.length?'border-color:var(--red)':'')+'"><div class="stat-n" style="'+(od.length?'color:var(--red)':'')+'">'+od.length+'</div><div class="stat-l">Overdue</div></div>';
+  h+='<div class="stat" style="'+(soon.length?'border-color:var(--yellow)':'')+'"><div class="stat-n" style="'+(soon.length?'color:var(--yellow)':'')+'">'+soon.length+'</div><div class="stat-l">Due this week</div></div>';
+  h+='<div class="stat"><div class="stat-n">'+all.filter(function(d){ return d.phase==='done'||d.phase==='sent'; }).length+'</div><div class="stat-l">Done</div></div>';
+  h+='</div>';
+
+  // Filter tabs
+  h+='<div class="tabs">';
+  var dTabs=['all','not started','in progress','in review','sent','done'];
+  var dTabAct=window.delTabActive||'all';
+  dTabs.forEach(function(t){
+    h+='<button class="tab'+(dTabAct===t?' active':'')+'" onclick="delTab(\''+t+'\')">'+t.charAt(0).toUpperCase()+t.slice(1)+'</button>';
+  });
+  h+='</div>';
+
+  if(dTabAct!=='all') dels=dels.filter(function(d){ return d.phase===dTabAct; });
+  dels=dels.slice().sort(function(a,b){ return (a.dueDate||'9').localeCompare(b.dueDate||'9'); });
+
+  if(!dels.length){
+    h+='<div class="empty"><div class="empty-ico">◫</div><div style="font-size:13px">No deliverables here yet.<br/>Hit <strong>+ Add Deliverable</strong> to get started.</div></div>';
+    h+='</div>'; return h;
+  }
+
+  h+='<div class="tbl-wrap"><table class="tbl"><thead><tr>';
+  h+='<th>Title</th><th>Type</th><th>Workstream</th><th>Phase</th><th>Priority</th><th>Start</th><th>Due</th><th>Reviewer</th><th>Jira</th><th></th>';
+  h+='</tr></thead><tbody>';
+
+  dels.forEach(function(d){
+    var du=_daysUntil(d.dueDate);
+    var dc=du===null?'':du<0?'overdue':du<=3?'soon':'';
+    var phaseColor={'not started':'var(--t3)','in progress':'var(--blue)','in review':'var(--yellow)','sent':'var(--green)','done':'var(--green)'}[d.phase]||'var(--t3)';
+    h+='<tr onclick="openDelivModal(\''+d.id+'\')" style="cursor:pointer">';
+    h+='<td><div style="font-weight:600;font-size:12.5px;display:flex;align-items:center;gap:6px">';
+    if(d.workstream) h+='<div style="width:4px;height:16px;border-radius:2px;background:'+wsColor(d.workstream)+';flex-shrink:0"></div>';
+    h+=_esc(d.title)+'</div>';
+    if(d.notes) h+='<div style="font-size:11px;color:var(--t3);margin-top:1px">'+_esc(d.notes.slice(0,60))+'…</div>';
+    h+='</td>';
+    h+='<td><span class="pill gray">'+_esc(d.type||'—')+'</span></td>';
+    h+='<td style="font-size:12px">'+_esc(d.workstream||'—')+'</td>';
+    h+='<td><span style="font-size:11px;font-weight:600;color:'+phaseColor+'">'+_esc(d.phase||'—')+'</span></td>';
+    h+='<td><span style="font-size:11px;color:var(--t2)">'+_esc(d.priority||'—')+'</span></td>';
+    h+='<td style="font-size:11px;color:var(--t3)">'+_fmt(d.startDate)+'</td>';
+    h+='<td style="font-size:11px;font-weight:600" class="'+dc+'">'+_fmt(d.dueDate)+'</td>';
+    h+='<td style="font-size:12px">'+_esc(d.reviewer||'—')+'</td>';
+    h+='<td>'+(d.jira?jiraLink(d.jira):'')+'</td>';
+    h+='<td onclick="event.stopPropagation()" style="white-space:nowrap">';
+    h+='<button class="btn sm ghost" onclick="deleteDeliv(\''+d.id+'\')">✕</button>';
+    h+='</td></tr>';
+  });
+
+  h+='</tbody></table></div></div>';
+  return h;
+}
+
+var delTabActive='all';
+function delTab(t){ window.delTabActive=t; delTabActive=t; renderContent(); }
+
+function deleteDeliv(id){
+  if(!confirm('Delete this deliverable?')) return;
+  DB.save('deliverables',DB.deliverables().filter(function(d){ return d.id!==id; }));
+  renderContent();
+}
+
+function openDelivModal(editId){
+  var dels=DB.deliverables();
+  var d=editId?dels.filter(function(x){ return x.id===editId; })[0]:null;
+  var ws=DB.settings().workstreams;
+  var wsOpts='<option value="">— none —</option>';
+  ws.forEach(function(w){ wsOpts+='<option value="'+_esc(w)+'"'+(d&&d.workstream===w?' selected':'')+'>'+_esc(w)+'</option>'; });
+  var typeOpts=''; DEL_TYPES.forEach(function(t){ typeOpts+='<option value="'+t+'"'+(d&&d.type===t?' selected':'')+'>'+t+'</option>'; });
+  var phaseOpts=''; DEL_PHASES.forEach(function(p){ phaseOpts+='<option value="'+p+'"'+((d?d.phase:'not started')===p?' selected':'')+'>'+p+'</option>'; });
+  var priOpts=''; DEL_PRIS.forEach(function(p){ priOpts+='<option value="'+p+'"'+((d?d.priority:'normal')===p?' selected':'')+'>'+p+'</option>'; });
+
+  // Cards for linking
+  var cards=DB.cards();
+  var cardOpts='<option value="">— none —</option>';
+  cards.forEach(function(c){ cardOpts+='<option value="'+c.id+'"'+(d&&d.linkedCard===c.id?' selected':'')+'>'+_esc(c.title)+'</option>'; });
+
+  showModal({title:d?'Edit Deliverable':'New Deliverable',wide:true,body:
+    '<div class="field"><label>Title</label><input class="inp" type="text" id="m-d-title" placeholder="What needs to be delivered?" value="'+_esc(d?d.title:'')+'"/></div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Type</label><select class="inp" id="m-d-type">'+typeOpts+'</select></div>'+
+      '<div class="field"><label>Workstream</label><select class="inp" id="m-d-ws">'+wsOpts+'</select></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Phase</label><select class="inp" id="m-d-phase">'+phaseOpts+'</select></div>'+
+      '<div class="field"><label>Priority</label><select class="inp" id="m-d-pri">'+priOpts+'</select></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Start Date</label><input class="inp" type="date" id="m-d-start" value="'+(d?d.startDate||'':'')+'"/></div>'+
+      '<div class="field"><label>Due Date</label><input class="inp" type="date" id="m-d-due" value="'+(d?d.dueDate||'':'')+'"/></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Who reviews it</label><input class="inp" type="text" id="m-d-rev" placeholder="ZM, CZ…" value="'+_esc(d?d.reviewer||'':'')+'"/></div>'+
+      '<div class="field"><label>Jira ticket</label><input class="inp" type="text" id="m-d-jira" placeholder="TDPGM-001" value="'+_esc(d?d.jira||'':'')+'"/></div>'+
+    '</div>'+
+    '<div class="field"><label>Link / SharePoint URL</label><input class="inp" type="text" id="m-d-url" placeholder="https://…" value="'+_esc(d?d.url||'':'')+'"/></div>'+
+    '<div class="field"><label>Link to Card</label><select class="inp" id="m-d-card">'+cardOpts+'</select></div>'+
+    '<div class="field"><label>Notes / What done looks like</label><textarea class="inp" id="m-d-notes" rows="3" placeholder="What does done look like?">'+_esc(d?d.notes||'':'')+'</textarea></div>',
+  onSave:function(){
+    var title=document.getElementById('m-d-title').value.trim();
+    if(!title){ alert('Title required.'); return; }
+    var obj={id:editId||_uid(),title:title,type:document.getElementById('m-d-type').value,
+      workstream:document.getElementById('m-d-ws').value,phase:document.getElementById('m-d-phase').value,
+      priority:document.getElementById('m-d-pri').value,startDate:document.getElementById('m-d-start').value,
+      dueDate:document.getElementById('m-d-due').value,reviewer:document.getElementById('m-d-rev').value.trim(),
+      jira:document.getElementById('m-d-jira').value.trim(),url:document.getElementById('m-d-url').value.trim(),
+      linkedCard:document.getElementById('m-d-card').value,notes:document.getElementById('m-d-notes').value.trim(),
+      createdAt:d?d.createdAt:_now()};
+    if(editId) DB.save('deliverables',dels.map(function(x){ return x.id===editId?obj:x; }));
+    else DB.save('deliverables',[obj].concat(dels));
+    closeModal(); renderNav(); renderContent();
+  }});
+}
+
+// ── RELEASES ──────────────────────────────────────────────
+var REL_PHASES=['Embargoed','Internal Review','Comms Drafting','Comms Sent','Public Release','Post-Release'];
+var REL_PRODUCTS=['SQR','NSS','SPS','ISA','State Accountability','CCR','PPR','Insight','Other'];
+
+function buildReleases(){
+  var h2=renderHelpTip('releases');
+  var releases=DB.releases();
+  var h=h2+'<div style="max-width:1060px">';
+
+  // Pipeline view
+  h+='<div style="margin-bottom:20px">';
+  h+='<div class="section-label" style="margin-bottom:12px">Pipeline</div>';
+  h+='<div class="pipeline">';
+  REL_PHASES.forEach(function(phase){
+    var inPhase=releases.filter(function(r){ return r.phase===phase; });
+    h+='<div class="pipe-col">';
+    h+='<div class="pipe-col-title">'+_esc(phase)+' <span style="font-weight:400;color:var(--t3)">('+inPhase.length+')</span></div>';
+    inPhase.forEach(function(r){
+      h+='<div class="pipe-item" onclick="openReleaseModal(\''+r.id+'\')">';
+      h+='<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">';
+      h+='<div style="width:6px;height:6px;border-radius:50%;background:'+wsColor(r.product||'Other')+'"></div>';
+      h+='<span style="font-size:11.5px;font-weight:600">'+_esc(r.title)+'</span></div>';
+      if(r.releaseDate) h+='<div style="font-size:10px;color:var(--t3)">'+_fmt(r.releaseDate)+'</div>';
+      h+='</div>';
+    });
+    h+='</div>';
+  });
+  h+='</div></div>';
+
+  // Gantt-style timeline
+  if(releases.length){
+    h+='<div class="card" style="margin-bottom:16px">';
+    h+='<div class="card-head"><span>◫</span><span class="card-title">Timeline</span></div>';
+    h+='<div class="card-body" style="overflow-x:auto">';
+    h+=buildGantt(releases);
+    h+='</div></div>';
+  }
+
+  // Full list
+  h+='<div class="section-label">All Releases</div>';
+  if(!releases.length){
+    h+='<div class="empty"><div class="empty-ico">⬡</div><div style="font-size:13px">No releases yet.<br/>Hit <strong>+ New Release</strong> to add one.</div></div>';
+    h+='</div>'; return h;
+  }
+
+  var sorted=releases.slice().sort(function(a,b){ return (a.releaseDate||'9').localeCompare(b.releaseDate||'9'); });
+  h+='<div class="tbl-wrap"><table class="tbl"><thead><tr>';
+  h+='<th>Release</th><th>Product</th><th>Phase</th><th>Release Date</th><th>Embargo Date</th><th>Notes</th><th></th>';
+  h+='</tr></thead><tbody>';
+  sorted.forEach(function(r){
+    var du=_daysUntil(r.releaseDate);
+    var dc=du===null?'':du<0?'overdue':du<=7?'soon':'';
+    h+='<tr onclick="openReleaseModal(\''+r.id+'\')" style="cursor:pointer">';
+    h+='<td><div style="font-weight:600;display:flex;align-items:center;gap:6px"><div style="width:4px;height:16px;border-radius:2px;background:'+wsColor(r.product||'Other')+'"></div>'+_esc(r.title)+'</div></td>';
+    h+='<td><span class="pill" style="background:'+wsColor(r.product||'Other')+'18;color:'+wsColor(r.product||'Other')+'">'+_esc(r.product||'—')+'</span></td>';
+    h+='<td style="font-size:12px">'+_esc(r.phase||'—')+'</td>';
+    h+='<td class="'+dc+'" style="font-size:12px;font-weight:600">'+_fmt(r.releaseDate)+'</td>';
+    h+='<td style="font-size:12px;color:var(--t3)">'+_fmt(r.embargoDate)+'</td>';
+    h+='<td style="font-size:11px;color:var(--t3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_esc(r.notes||'')+'</td>';
+    h+='<td onclick="event.stopPropagation()"><button class="btn sm ghost" onclick="deleteRelease(\''+r.id+'\')">✕</button></td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div></div>';
+  return h;
+}
+
+function buildGantt(releases){
+  var sorted=releases.filter(function(r){ return r.startDate&&r.releaseDate; }).sort(function(a,b){ return a.startDate.localeCompare(b.startDate); });
+  if(!sorted.length) return '<div style="color:var(--t3);font-size:12px">Add start dates and release dates to see the timeline.</div>';
+
+  var minD=sorted[0].startDate;
+  var maxD=sorted.reduce(function(m,r){ return r.releaseDate>m?r.releaseDate:m; },sorted[0].releaseDate);
+  var totalDays=Math.max(1,Math.round((new Date(maxD+'T00:00:00')-new Date(minD+'T00:00:00'))/86400000))+7;
+
+  var h='<div style="min-width:600px">';
+  sorted.forEach(function(r){
+    var startOff=Math.round((new Date(r.startDate+'T00:00:00')-new Date(minD+'T00:00:00'))/86400000);
+    var dur=Math.max(1,Math.round((new Date(r.releaseDate+'T00:00:00')-new Date(r.startDate+'T00:00:00'))/86400000));
+    var leftPct=(startOff/totalDays*100).toFixed(1);
+    var widthPct=(dur/totalDays*100).toFixed(1);
+    h+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">';
+    h+='<div style="width:120px;flex-shrink:0;font-size:11px;font-weight:600;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_esc(r.title)+'</div>';
+    h+='<div style="flex:1;position:relative;height:22px;background:var(--border);border-radius:4px">';
+    h+='<div style="position:absolute;left:'+leftPct+'%;width:'+widthPct+'%;height:100%;background:'+wsColor(r.product||'Other')+';border-radius:4px;display:flex;align-items:center;padding:0 6px;overflow:hidden">';
+    h+='<span style="font-size:9px;color:#fff;white-space:nowrap">'+_esc(r.phase||'')+'</span>';
+    h+='</div></div></div>';
+  });
+  h+='</div>';
+  return h;
+}
+
+function deleteRelease(id){
+  if(!confirm('Delete this release?')) return;
+  DB.save('releases',DB.releases().filter(function(r){ return r.id!==id; }));
+  renderContent();
+}
+
+function openReleaseModal(editId){
+  var releases=DB.releases();
+  var r=editId?releases.filter(function(x){ return x.id===editId; })[0]:null;
+  var prodOpts=''; REL_PRODUCTS.forEach(function(p){ prodOpts+='<option value="'+p+'"'+(r&&r.product===p?' selected':'')+'>'+p+'</option>'; });
+  var phaseOpts=''; REL_PHASES.forEach(function(p){ phaseOpts+='<option value="'+p+'"'+(r&&r.phase===p?' selected':'')+'>'+p+'</option>'; });
+
+  showModal({title:r?'Edit Release':'New Release',wide:true,body:
+    '<div class="g2">'+
+      '<div class="field"><label>Release Name</label><input class="inp" type="text" id="m-r-title" placeholder="e.g. SQR Prelim 2025" value="'+_esc(r?r.title:'')+'"/></div>'+
+      '<div class="field"><label>Product</label><select class="inp" id="m-r-prod">'+prodOpts+'</select></div>'+
+    '</div>'+
+    '<div class="field"><label>Phase</label><select class="inp" id="m-r-phase">'+phaseOpts+'</select></div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Start Date</label><input class="inp" type="date" id="m-r-start" value="'+(r?r.startDate||'':'')+'"/></div>'+
+      '<div class="field"><label>Release Date</label><input class="inp" type="date" id="m-r-rel" value="'+(r?r.releaseDate||'':'')+'"/></div>'+
+    '</div>'+
+    '<div class="field"><label>Embargo Date</label><input class="inp" type="date" id="m-r-emb" value="'+(r?r.embargoDate||'':'')+'"/></div>'+
+    '<div class="field"><label>Notes</label><textarea class="inp" id="m-r-notes" rows="3" placeholder="Key milestones, dependencies…">'+_esc(r?r.notes||'':'')+'</textarea></div>',
+  onSave:function(){
+    var title=document.getElementById('m-r-title').value.trim();
+    if(!title){ alert('Name required.'); return; }
+    var obj={id:editId||_uid(),title:title,product:document.getElementById('m-r-prod').value,
+      phase:document.getElementById('m-r-phase').value,startDate:document.getElementById('m-r-start').value,
+      releaseDate:document.getElementById('m-r-rel').value,embargoDate:document.getElementById('m-r-emb').value,
+      notes:document.getElementById('m-r-notes').value.trim(),createdAt:r?r.createdAt:_now()};
+    if(editId) DB.save('releases',releases.map(function(x){ return x.id===editId?obj:x; }));
+    else DB.save('releases',[obj].concat(releases));
+    closeModal(); renderContent();
+  }});
+}
+
+// ── CALENDAR ──────────────────────────────────────────────
+var calYear=new Date().getFullYear();
+var calMonth=new Date().getMonth();
+var calViewMode='month';
+
+function calToggleView(){ calViewMode=calViewMode==='month'?'week':'month'; renderTopbar(); renderContent(); }
+
+function buildCalendar(){
+  var h2=renderHelpTip('calendar');
+  var events=DB.events();
+  var todos=DB.todos();
+  var deliverables=DB.deliverables();
+  var cards=DB.cards();
+
+  // Combine all date-able items into calendar items
+  var allItems=[];
+  events.forEach(function(e){ allItems.push({date:e.date,title:e.title,time:e.time||'',type:'event',ws:e.workstream||'',color:wsColor(e.workstream||'Other'),id:e.id,prepNotes:e.prepNotes||'',attendees:e.attendees||''}); });
+  todos.forEach(function(t){ if(t.date&&!t.done) allItems.push({date:t.date,title:t.text,time:'',type:'task',ws:t.workstream||'',color:wsColor(t.workstream||'Other'),id:t.id}); });
+  deliverables.forEach(function(d){ if(d.dueDate&&d.phase!=='done'&&d.phase!=='sent') allItems.push({date:d.dueDate,title:'DUE: '+d.title,time:'',type:'deliverable',ws:d.workstream||'',color:wsColor(d.workstream||'Other'),id:d.id}); });
+  cards.forEach(function(c){ if(c.due&&c.status!=='done') allItems.push({date:c.due,title:'[Card] '+c.title,time:'',type:'card',ws:c.workstream||'',color:wsColor(c.workstream||'Other'),id:c.id}); });
+
+  if(calViewMode==='week') return h2+buildWeekView(allItems);
+  return h2+buildMonthView(allItems);
+}
+
+function buildMonthView(allItems){
+  var DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var td=_today();
+  var first=new Date(calYear,calMonth,1).getDay();
+  var dim=new Date(calYear,calMonth+1,0).getDate();
+  var diPrev=new Date(calYear,calMonth,0).getDate();
+  var total=Math.ceil((first+dim)/7)*7;
+
+  var h='<div style="max-width:1060px">';
+  h+='<div class="row" style="margin-bottom:14px">';
+  h+='<button class="btn" onclick="calNav(-1)">‹</button>';
+  h+='<span style="font-family:Lora,serif;font-size:17px;font-weight:600;flex:1;text-align:center">'+MONTHS[calMonth]+' '+calYear+'</span>';
+  h+='<button class="btn" onclick="calNav(1)">›</button>';
+  h+='<button class="btn sm ghost" onclick="calGoToday()">Today</button>';
+  h+='</div>';
+
+  h+='<div class="g2" style="align-items:start;gap:20px">';
+
+  // Grid
+  h+='<div>';
+  h+='<div class="cal-grid" style="margin-bottom:4px">';
+  DAYS.forEach(function(d){ h+='<div class="cal-dh">'+d+'</div>'; });
+  h+='</div><div class="cal-grid">';
+
+  var dayCount=1,nextCount=1;
+  for(var i=0;i<total;i++){
+    var d, om=false;
+    if(i<first){ d=diPrev-first+i+1; om=true; }
+    else if(dayCount>dim){ d=nextCount++; om=true; }
+    else{ d=dayCount++; }
+    var ds=om?'':calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var isToday=ds===td;
+    var dayItems=ds?allItems.filter(function(e){ return e.date===ds; }):[];
+    h+='<div class="cal-day'+(om?' om':'')+(isToday?' today':'')+'"'+(ds?' onclick="openEventModal(\'\',\''+ds+'\')"':'')+' style="cursor:'+(ds?'pointer':'default')+'">';
+    h+='<div class="cal-dn">'+d+'</div>';
+    dayItems.slice(0,3).forEach(function(e){
+      h+='<div class="cal-ev" style="background:'+e.color+'" title="'+_esc(e.title)+'">';
+      if(e.type==='task') h+='✓ ';
+      else if(e.type==='deliverable') h+='◫ ';
+      else if(e.type==='card') h+='▦ ';
+      h+=_esc(e.title)+'</div>';
+    });
+    if(dayItems.length>3) h+='<div style="font-size:9px;color:var(--t3)">+'+(dayItems.length-3)+' more</div>';
+    h+='</div>';
+  }
+  h+='</div></div>';
+
+  // Upcoming
+  var upcoming=allItems.filter(function(e){ return e.date>=_today(); }).sort(function(a,b){ return a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''); }).slice(0,12);
+  h+='<div>';
+  h+='<div class="section-label">Upcoming</div>';
+  if(!upcoming.length) h+='<div style="color:var(--t3);font-size:12.5px">Nothing upcoming</div>';
+  upcoming.forEach(function(e){
+    var dt=new Date(e.date+'T00:00:00');
+    h+='<div style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border)">';
+    h+='<div style="text-align:center;min-width:34px;flex-shrink:0">';
+    h+='<div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase">'+dt.toLocaleDateString('en-US',{month:'short'})+'</div>';
+    h+='<div style="font-size:16px;font-weight:700;line-height:1">'+dt.getDate()+'</div>';
+    h+='</div>';
+    h+='<div style="flex:1">';
+    h+='<div style="display:flex;align-items:center;gap:5px">';
+    h+='<div style="width:4px;height:14px;border-radius:2px;background:'+e.color+'"></div>';
+    h+='<div style="font-size:12.5px;font-weight:600">'+_esc(e.title)+'</div>';
+    h+='</div>';
+    if(e.time) h+='<div style="font-size:11px;color:var(--t3)">'+_esc(e.time)+'</div>';
+    if(e.type==='event'&&e.prepNotes) h+='<div style="font-size:11px;color:var(--t2)">📋 '+_esc(e.prepNotes)+'</div>';
+    h+='</div>';
+    if(e.type==='event') h+='<div onclick="event.stopPropagation()" style="display:flex;gap:3px;flex-shrink:0"><button class="btn sm ghost" onclick="openEventModal(\''+e.id+'\',\'\')">✏</button><button class="btn sm ghost" onclick="deleteEvent(\''+e.id+'\')">✕</button></div>';
+    h+='</div>';
+  });
+  h+='</div></div></div>';
+  return h;
+}
+
+function buildWeekView(allItems){
+  var DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var td=_today();
+  var todayD=new Date();
+  var startOfWeek=new Date(todayD);
+  startOfWeek.setDate(todayD.getDate()-todayD.getDay());
+
+  var h='<div style="max-width:1060px">';
+  h+='<div class="row" style="margin-bottom:14px">';
+  h+='<button class="btn" onclick="calNav(-1)">‹ Prev</button>';
+  h+='<span style="font-family:Lora,serif;font-size:17px;font-weight:600;flex:1;text-align:center">Week of '+_fmt(startOfWeek.toISOString().split('T')[0])+'</span>';
+  h+='<button class="btn" onclick="calNav(1)">Next ›</button>';
+  h+='<button class="btn sm ghost" onclick="calGoToday()">Today</button>';
+  h+='</div>';
+
+  // Week header
+  h+='<div style="display:grid;grid-template-columns:50px repeat(7,1fr);gap:3px;margin-bottom:4px">';
+  h+='<div></div>';
+  for(var d=0;d<7;d++){
+    var day=new Date(startOfWeek); day.setDate(startOfWeek.getDate()+d);
+    var ds=day.toISOString().split('T')[0];
+    var isToday=ds===td;
+    h+='<div style="text-align:center;padding:4px;'+(isToday?'background:var(--accent);border-radius:6px;color:#fff':'')+'">'+
+      '<div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:.7">'+DAYS[d]+'</div>'+
+      '<div style="font-size:14px;font-weight:700">'+day.getDate()+'</div></div>';
+  }
+  h+='</div>';
+
+  // Week body
+  h+='<div style="display:grid;grid-template-columns:50px repeat(7,1fr);gap:3px">';
+  h+='<div></div>';
+  for(var d=0;d<7;d++){
+    var day=new Date(startOfWeek); day.setDate(startOfWeek.getDate()+d);
+    var ds=day.toISOString().split('T')[0];
+    var isToday=ds===td;
+    var dayItems=allItems.filter(function(e){ return e.date===ds; }).sort(function(a,b){ return (a.time||'').localeCompare(b.time||''); });
+    h+='<div style="min-height:120px;background:var(--card);border:1px solid '+(isToday?'var(--accent)':' var(--border)')+';border-radius:8px;padding:5px;cursor:pointer" onclick="openEventModal(\'\',\''+ds+'\')">';
+    dayItems.forEach(function(e){
+      h+='<div style="font-size:9.5px;border-radius:3px;padding:2px 4px;margin-bottom:2px;background:'+e.color+';color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+_esc(e.title)+'">';
+      if(e.time) h+=e.time+' ';
+      if(e.type==='task') h+='✓ ';
+      h+=_esc(e.title)+'</div>';
+    });
+    h+='</div>';
+  }
+  h+='</div></div>';
+  return h;
+}
+
+function calNav(dir){
+  if(calViewMode==='week'){
+    var td=new Date();
+    td.setDate(td.getDate()+(dir*7));
+    calYear=td.getFullYear(); calMonth=td.getMonth();
+  } else {
+    calMonth+=dir;
+    if(calMonth>11){ calMonth=0; calYear++; }
+    if(calMonth<0){ calMonth=11; calYear--; }
+  }
+  renderContent();
+}
+function calGoToday(){ calYear=new Date().getFullYear(); calMonth=new Date().getMonth(); renderContent(); }
+
+function deleteEvent(id){
+  if(!confirm('Delete?')) return;
+  DB.save('events',DB.events().filter(function(e){ return e.id!==id; }));
+  renderContent();
+}
+
+function openEventModal(editId,prefill){
+  var events=DB.events();
+  var e=editId?events.filter(function(x){ return x.id===editId; })[0]:null;
+  var ws=DB.settings().workstreams;
+  var wsOpts='<option value="">— none —</option>';
+  ws.forEach(function(w){ wsOpts+='<option value="'+_esc(w)+'"'+(e&&e.workstream===w?' selected':'')+'>'+_esc(w)+'</option>'; });
+
+  showModal({title:e?'Edit Event':'New Event',body:
+    '<div class="field"><label>Title</label><input class="inp" type="text" id="m-e-title" placeholder="Meeting, deadline, reminder…" value="'+_esc(e?e.title:'')+'"/></div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Date</label><input class="inp" type="date" id="m-e-date" value="'+(e?e.date:prefill||_today())+'"/></div>'+
+      '<div class="field"><label>Time</label><input class="inp" type="text" id="m-e-time" placeholder="10:00 AM" value="'+_esc(e?e.time||'':'')+'"/></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Workstream</label><select class="inp" id="m-e-ws">'+wsOpts+'</select></div>'+
+      '<div class="field"><label>Attendees</label><input class="inp" type="text" id="m-e-att" placeholder="ZM, CZ…" value="'+_esc(e?e.attendees||'':'')+'"/></div>'+
+    '</div>'+
+    '<div class="field"><label>Prep Notes</label><textarea class="inp" id="m-e-prep" rows="2" placeholder="What do I need to prepare?">'+_esc(e?e.prepNotes||'':'')+'</textarea></div>'+
+    '<div class="field"><label>Notes</label><textarea class="inp" id="m-e-notes" rows="2" placeholder="Other context…">'+_esc(e?e.notes||'':'')+'</textarea></div>',
+  onSave:function(){
+    var title=document.getElementById('m-e-title').value.trim();
+    if(!title){ alert('Title required.'); return; }
+    var obj={id:editId||_uid(),title:title,date:document.getElementById('m-e-date').value||_today(),
+      time:document.getElementById('m-e-time').value.trim(),workstream:document.getElementById('m-e-ws').value,
+      attendees:document.getElementById('m-e-att').value.trim(),prepNotes:document.getElementById('m-e-prep').value.trim(),
+      notes:document.getElementById('m-e-notes').value.trim()};
+    if(editId) DB.save('events',events.map(function(x){ return x.id===editId?obj:x; }));
+    else DB.save('events',[obj].concat(events));
+    closeModal(); renderContent();
+  }});
+}
+
+// ── TO-DO ─────────────────────────────────────────────────
+var todoGroupBy='date';
+
+function toggleCardView(){ todoGroupBy=todoGroupBy==='date'?'workstream':'date'; renderContent(); }
+
+function buildTodo(){
+  var h2=renderHelpTip('todo');
+  var todos=DB.todos().slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+  var open=todos.filter(function(t){ return !t.done; }).length;
+  var done=todos.filter(function(t){ return t.done; }).length;
+  var td=_today();
+
+  var h=h2+'<div style="max-width:660px">';
+  h+='<div class="row wrap" style="margin-bottom:12px">';
+  h+='<button class="btn sm" onclick="todoToggleGroup()">Group by: '+(todoGroupBy==='date'?'Date':'Workstream')+'</button>';
+  h+='<span class="pill gray">'+open+' open</span>';
+  if(done) h+='<span class="pill green">'+done+' done</span>';
+  if(done) h+='<button class="btn sm ghost" onclick="clearDone()" style="color:var(--t3)">Clear done</button>';
+  h+='</div>';
+
+  if(!todos.length){
+    h+='<div class="empty"><div class="empty-ico">✓</div><div style="font-size:13px">No tasks yet.</div></div>';
+    h+='</div>'; return h;
+  }
+
+  var groups={};
+  todos.forEach(function(t){
+    var k=todoGroupBy==='workstream'?(t.workstream||'No workstream'):(t.date||'No date');
+    if(!groups[k]) groups[k]=[];
+    groups[k].push(t);
+  });
+
+  var keys=Object.keys(groups).sort();
+  keys.forEach(function(key){
+    var label=key, od=false;
+    if(todoGroupBy==='date'){
+      if(key==='No date') label='No date';
+      else if(key===td) label='Today';
+      else{
+        var diff=Math.round((new Date(key+'T00:00:00')-new Date(new Date().toDateString()))/86400000);
+        if(diff===1) label='Tomorrow';
+        else if(diff===-1) label='Yesterday';
+        else if(diff<0){ label='Overdue — '+_fmt(key); od=true; }
+        else label=_fmtFull(key);
+      }
+    }
+    h+='<div class="dg'+(od?' od':'')+'">'+label+'</div>';
+    groups[key].forEach(function(t){
+      h+='<div class="todo-item'+(t.done?' done':'')+'">';
+      h+='<div class="todo-cb'+(t.done?' chk':'')+'" onclick="toggleTodo(\''+t.id+'\')">'+(t.done?'✓':'')+'</div>';
+      h+='<div style="flex:1;cursor:pointer" onclick="toggleTodo(\''+t.id+'\')">';
+      h+='<div class="todo-text">'+_esc(t.text)+'</div>';
+      h+='<div class="todo-meta">';
+      if(t.workstream&&todoGroupBy==='date') h+='<span style="color:'+wsColor(t.workstream)+'">'+_esc(t.workstream)+'</span>';
+      if(t.waitingOn) h+='<span style="color:var(--yellow)">⏳ '+_esc(t.waitingOn)+'</span>';
+      if(t.linkedCard){
+        var c=DB.cards().filter(function(x){ return x.id===t.linkedCard; })[0];
+        if(c) h+='<span style="color:var(--blue)">▦ '+_esc(c.title.slice(0,30))+'</span>';
+      }
+      if(t.priority==='urgent') h+='<span class="pill red" style="font-size:9px">urgent</span>';
+      if(t.priority==='high')   h+='<span class="pill orange" style="font-size:9px">high</span>';
+      if(t.recurring) h+='<span style="font-size:9px;color:var(--t3)">↻ recurring</span>';
+      h+='</div></div>';
+      h+='<div class="todo-actions">';
+      h+='<button class="btn sm ghost" onclick="openTodoModal(\''+t.id+'\')">✏</button>';
+      h+='<button class="btn sm ghost" onclick="deleteTodo(\''+t.id+'\')">✕</button>';
+      h+='</div></div>';
+    });
+  });
+
+  h+='</div>';
+  return h;
+}
+
+var todoGroupBy='date';
+function todoToggleGroup(){ todoGroupBy=todoGroupBy==='date'?'workstream':'date'; renderContent(); }
+function toggleTodo(id){
+  var todos=DB.todos();
+  for(var i=0;i<todos.length;i++) if(todos[i].id===id){ todos[i].done=!todos[i].done; break; }
+  DB.save('todos',todos); renderNav(); renderContent();
+}
+function deleteTodo(id){ DB.save('todos',DB.todos().filter(function(t){ return t.id!==id; })); renderContent(); }
+function clearDone(){ DB.save('todos',DB.todos().filter(function(t){ return !t.done; })); renderContent(); }
+
+function openTodoModal(editId){
+  var todos=DB.todos();
+  var t=editId?todos.filter(function(x){ return x.id===editId; })[0]:null;
+  var ws=DB.settings().workstreams;
+  var wsOpts='<option value="">— none —</option>';
+  ws.forEach(function(w){ wsOpts+='<option value="'+_esc(w)+'"'+(t&&t.workstream===w?' selected':'')+'>'+_esc(w)+'</option>'; });
+  var cards=DB.cards();
+  var cardOpts='<option value="">— none —</option>';
+  cards.forEach(function(c){ cardOpts+='<option value="'+c.id+'"'+(t&&t.linkedCard===c.id?' selected':'')+'>'+_esc(c.title)+'</option>'; });
+
+  showModal({title:t?'Edit Task':'New Task',body:
+    '<div class="field"><label>Task</label><textarea class="inp" id="m-t-text" rows="2" placeholder="What needs to get done?">'+_esc(t?t.text:'')+'</textarea></div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Date</label><input class="inp" type="date" id="m-t-date" value="'+(t?t.date:_today())+'"/></div>'+
+      '<div class="field"><label>Priority</label><select class="inp" id="m-t-pri">'+
+        '<option value="normal"'+((!t||t.priority==='normal')?' selected':'')+'>Normal</option>'+
+        '<option value="high"'+(t&&t.priority==='high'?' selected':'')+'>High</option>'+
+        '<option value="urgent"'+(t&&t.priority==='urgent'?' selected':'')+'>Urgent</option>'+
+      '</select></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Workstream</label><select class="inp" id="m-t-ws">'+wsOpts+'</select></div>'+
+      '<div class="field"><label>Link to Card</label><select class="inp" id="m-t-card">'+cardOpts+'</select></div>'+
+    '</div>'+
+    '<div class="field"><label>Waiting on</label><input class="inp" type="text" id="m-t-wait" placeholder="e.g. Waiting on ZM to review…" value="'+_esc(t?t.waitingOn||'':'')+'"/></div>'+
+    '<div class="field"><label>Recurring</label><select class="inp" id="m-t-rec">'+
+      '<option value="">Not recurring</option>'+
+      '<option value="daily"'+(t&&t.recurring==='daily'?' selected':'')+'>Daily</option>'+
+      '<option value="weekly"'+(t&&t.recurring==='weekly'?' selected':'')+'>Weekly</option>'+
+      '<option value="biweekly"'+(t&&t.recurring==='biweekly'?' selected':'')+'>Bi-weekly</option>'+
+      '<option value="monthly"'+(t&&t.recurring==='monthly'?' selected':'')+'>Monthly</option>'+
+    '</select></div>'+
+    '<div class="field"><label>Notes</label><textarea class="inp" id="m-t-notes" rows="2" placeholder="Optional…">'+_esc(t?t.notes||'':'')+'</textarea></div>',
+  onSave:function(){
+    var text=document.getElementById('m-t-text').value.trim();
+    if(!text){ alert('Task text required.'); return; }
+    var obj={id:editId||_uid(),text:text,date:document.getElementById('m-t-date').value||_today(),
+      priority:document.getElementById('m-t-pri').value,workstream:document.getElementById('m-t-ws').value,
+      linkedCard:document.getElementById('m-t-card').value,waitingOn:document.getElementById('m-t-wait').value.trim(),
+      recurring:document.getElementById('m-t-rec').value,notes:document.getElementById('m-t-notes').value.trim(),
+      done:t?t.done:false,createdAt:t?t.createdAt:_now()};
+    if(editId) DB.save('todos',todos.map(function(x){ return x.id===editId?obj:x; }));
+    else DB.save('todos',[obj].concat(todos));
+    closeModal(); renderNav(); renderContent();
+  }});
+}
+
+// ── CARDS ─────────────────────────────────────────────────
+var CARD_STATS=[{id:'pending',label:'Pending',color:'var(--yellow)'},{id:'inprogress',label:'In Progress',color:'var(--blue)'},{id:'blocked',label:'Blocked',color:'var(--red)'},{id:'done',label:'Done',color:'var(--green)'}];
+var CARD_PRIS=[{id:'urgent',label:'Urgent',color:'var(--red)'},{id:'high',label:'High',color:'var(--accent)'},{id:'normal',label:'Normal',color:'var(--blue)'},{id:'low',label:'Low',color:'var(--t3)'}];
+var cardViewMode='list';
+
+function getCrdStat(id){ for(var i=0;i<CARD_STATS.length;i++) if(CARD_STATS[i].id===id) return CARD_STATS[i]; return CARD_STATS[0]; }
+function getCrdPri(id){ for(var i=0;i<CARD_PRIS.length;i++) if(CARD_PRIS[i].id===id) return CARD_PRIS[i]; return CARD_PRIS[2]; }
+
+function toggleCardView(){ cardViewMode=cardViewMode==='list'?'kanban':'list'; renderContent(); }
+
+function buildCards(){
+  var h2=renderHelpTip('cards');
+  var allCards=DB.cards();
+  var q=''; var qEl=document.getElementById('cards-q');
+  if(qEl) q=qEl.value.toLowerCase();
+  var cards=q?allCards.filter(function(c){ return c.title.toLowerCase().indexOf(q)>-1||(c.workstream||'').toLowerCase().indexOf(q)>-1; }):allCards;
+
+  var h='<div style="max-width:1060px">';
+  h+=h2;
+  // Filter pills
+  h+='<div class="row wrap" style="margin-bottom:12px;gap:6px">';
+  var cFilters=[{id:'all',label:'All'},{id:'pending',label:'Pending'},{id:'inprogress',label:'In Progress'},{id:'blocked',label:'Blocked'},{id:'done',label:'Done'}];
+  var cf=window.cardFilter||'all';
+  cFilters.forEach(function(f){
+    h+='<button class="btn sm'+(cf===f.id?' active-filter':'')+'" onclick="setCardFilter(\''+f.id+'\')">'+f.label+'</button>';
+  });
+  h+='</div>';
+
+  if(cf!=='all') cards=cards.filter(function(c){ return c.status===cf; });
+
+  if(!cards.length){
+    h+='<div class="empty"><div class="empty-ico">▦</div><div style="font-size:13px">No cards here.</div></div>';
+    h+='</div>'; return h;
+  }
+
+  if(cardViewMode==='kanban'){
+    h+=buildKanban(cards);
+  } else {
+    h+=buildCardList(cards);
+  }
+
+  h+='</div>';
+  return h;
+}
+
+window.cardFilter='all';
+function setCardFilter(f){ window.cardFilter=f; renderContent(); }
+
+function buildKanban(cards){
+  var h='<div class="kanban">';
+  CARD_STATS.forEach(function(st){
+    var col=cards.filter(function(c){ return c.status===st.id; });
+    h+='<div class="kanban-col">';
+    h+='<div class="kanban-col-title"><div style="width:8px;height:8px;border-radius:50%;background:'+st.color+'"></div>'+st.label+' <span style="font-weight:400">('+col.length+')</span></div>';
+    col.forEach(function(c){
+      var pri=getCrdPri(c.priority);
+      h+='<div class="kanban-card" onclick="openCardModal(\''+c.id+'\')">';
+      h+='<div style="height:2px;border-radius:2px;background:'+pri.color+';margin-bottom:7px"></div>';
+      h+='<div style="font-size:12.5px;font-weight:600;margin-bottom:4px">'+_esc(c.title)+'</div>';
+      if(c.workstream) h+='<div style="font-size:10.5px;color:'+wsColor(c.workstream)+'">'+_esc(c.workstream)+'</div>';
+      if(c.due) h+='<div style="font-size:10.5px;color:var(--t3);margin-top:3px">📅 '+_fmt(c.due)+'</div>';
+      h+='</div>';
+    });
+    h+='</div>';
+  });
+  h+='</div>';
+  return h;
+}
+
+function buildCardList(cards){
+  var groups={};
+  var order=[];
+  cards.forEach(function(c){
+    var k=c.workstream||'Other';
+    if(!groups[k]){ groups[k]=[]; order.push(k); }
+    groups[k].push(c);
+  });
+
+  var h='';
+  order.forEach(function(ws){
+    h+='<div style="margin-bottom:20px">';
+    h+='<div class="section-label" style="display:flex;align-items:center;gap:7px"><div style="width:8px;height:8px;border-radius:50%;background:'+wsColor(ws)+'"></div>'+_esc(ws)+'</div>';
+    h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:10px">';
+    groups[ws].forEach(function(c){
+      var st=getCrdStat(c.status); var pri=getCrdPri(c.priority);
+      var stuckDays=_daysAgo(c.statusChangedAt);
+      var isStuck=stuckDays!==null&&stuckDays>7&&c.status!=='done';
+      h+='<div class="pcard'+(isStuck?' stuck':'')+'" onclick="openCardModal(\''+c.id+'\')"'+(isStuck?' style="border-color:var(--yellow)"':'')+' >';
+      h+='<div class="bar" style="background:'+pri.color+'"></div>';
+      h+='<div class="row" style="align-items:flex-start">';
+      h+='<div class="pt" style="flex:1">'+_esc(c.title)+'</div>';
+      h+='<div class="pa" onclick="event.stopPropagation()">';
+      h+='<button class="btn sm ghost" onclick="cycleCardStatus(\''+c.id+'\')">↻</button>';
+      h+='<button class="btn sm ghost" onclick="deleteCard(\''+c.id+'\')">✕</button>';
+      h+='</div></div>';
+      h+='<div class="pm">';
+      h+='<span class="pill" style="background:'+st.color+'18;color:'+st.color+'">'+st.label+'</span>';
+      if(c.owner) h+='<span>👤 '+_esc(c.owner)+'</span>';
+      if(c.due) h+='<span class="'+(_isOD(c.due)?'overdue':_isSoon(c.due)?'soon':'')+'">📅 '+_fmt(c.due)+'</span>';
+      if(c.jira) h+='<span>'+jiraLink(c.jira)+'</span>';
+      if(isStuck) h+='<span style="color:var(--yellow);font-size:9.5px">⚠ '+stuckDays+'d in '+st.label+'</span>';
+      h+='</div>';
+      if(c.blockerNote&&c.status==='blocked') h+='<div style="font-size:11px;color:var(--red);margin-top:6px;padding:4px 8px;background:#fdf0ee;border-radius:6px">⛔ '+_esc(c.blockerNote)+'</div>';
+      h+='</div>';
+    });
+    h+='</div></div>';
+  });
+  return h;
+}
+
+function cycleCardStatus(id){
+  var cards=DB.cards();
+  var order=['pending','inprogress','blocked','done'];
+  for(var i=0;i<cards.length;i++) if(cards[i].id===id){
+    var idx=order.indexOf(cards[i].status);
+    cards[i].status=order[(idx+1)%order.length];
+    cards[i].statusChangedAt=_now();
+    break;
+  }
+  DB.save('cards',cards); renderNav(); renderContent();
+}
+function deleteCard(id){
+  if(!confirm('Delete this card?')) return;
+  DB.save('cards',DB.cards().filter(function(c){ return c.id!==id; })); renderContent();
+}
+
+function openCardModal(editId){
+  var cards=DB.cards();
+  var c=editId?cards.filter(function(x){ return x.id===editId; })[0]:null;
+  var ws=DB.settings().workstreams;
+  var wsOpts='<option value="">— none —</option>';
+  ws.forEach(function(w){ wsOpts+='<option value="'+_esc(w)+'"'+(c&&c.workstream===w?' selected':'')+'>'+_esc(w)+'</option>'; });
+  var statOpts=''; CARD_STATS.forEach(function(s){ statOpts+='<option value="'+s.id+'"'+((c?c.status:'pending')===s.id?' selected':'')+'>'+s.label+'</option>'; });
+  var priOpts=''; CARD_PRIS.forEach(function(p){ priOpts+='<option value="'+p.id+'"'+((c?c.priority:'normal')===p.id?' selected':'')+'>'+p.label+'</option>'; });
+
+  // Linked notes
+  var notes=DB.notes();
+  var noteOpts='<option value="">— none —</option>';
+  notes.forEach(function(n){ noteOpts+='<option value="'+n.id+'"'+(c&&c.linkedNote===n.id?' selected':'')+'>'+_esc(n.title)+' ('+n.date+')</option>'; });
+
+  showModal({title:c?'Edit Card':'New Card',wide:true,body:
+    '<div class="field"><label>Title</label><input class="inp" type="text" id="m-c-title" placeholder="What are you tracking?" value="'+_esc(c?c.title:'')+'"/></div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Workstream</label><select class="inp" id="m-c-ws">'+wsOpts+'</select></div>'+
+      '<div class="field"><label>Status</label><select class="inp" id="m-c-status">'+statOpts+'</select></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Priority</label><select class="inp" id="m-c-pri">'+priOpts+'</select></div>'+
+      '<div class="field"><label>Owner</label><input class="inp" type="text" id="m-c-owner" placeholder="SS, ZM…" value="'+_esc(c?c.owner||'':'')+'"/></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Start Date</label><input class="inp" type="date" id="m-c-start" value="'+(c?c.startDate||'':'')+'"/></div>'+
+      '<div class="field"><label>Due Date</label><input class="inp" type="date" id="m-c-due" value="'+(c?c.due||'':'')+'"/></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Jira Ticket</label><input class="inp" type="text" id="m-c-jira" placeholder="TDPGM-001" value="'+_esc(c?c.jira||'':'')+'"/></div>'+
+      '<div class="field"><label>Link to Note</label><select class="inp" id="m-c-note">'+noteOpts+'</select></div>'+
+    '</div>'+
+    '<div class="field"><label>Description</label><textarea class="inp" id="m-c-desc" rows="2" placeholder="What is this about?">'+_esc(c?c.desc||'':'')+'</textarea></div>'+
+    '<div class="field"><label>Action Items</label><textarea class="inp" id="m-c-actions" rows="2" placeholder="SS — follow up on X by date…">'+_esc(c?c.actions||'':'')+'</textarea></div>'+
+    '<div class="field"><label>Blocker Note</label><textarea class="inp" id="m-c-blocker" rows="2" placeholder="What is blocking this?">'+_esc(c?c.blockerNote||'':'')+'</textarea></div>',
+  onSave:function(){
+    var title=document.getElementById('m-c-title').value.trim();
+    if(!title){ alert('Title required.'); return; }
+    var obj={id:editId||_uid(),title:title,workstream:document.getElementById('m-c-ws').value,
+      status:document.getElementById('m-c-status').value,priority:document.getElementById('m-c-pri').value,
+      owner:document.getElementById('m-c-owner').value.trim(),startDate:document.getElementById('m-c-start').value,
+      due:document.getElementById('m-c-due').value,jira:document.getElementById('m-c-jira').value.trim(),
+      linkedNote:document.getElementById('m-c-note').value,desc:document.getElementById('m-c-desc').value.trim(),
+      actions:document.getElementById('m-c-actions').value.trim(),blockerNote:document.getElementById('m-c-blocker').value.trim(),
+      statusChangedAt:c?c.statusChangedAt:_now(),createdAt:c?c.createdAt:_now()};
+    if(editId) DB.save('cards',cards.map(function(x){ return x.id===editId?obj:x; }));
+    else DB.save('cards',[obj].concat(cards));
+    closeModal(); renderNav(); renderContent();
+  }});
+}
+
+// ── MEETING NOTES ─────────────────────────────────────────
+var NOTE_SEC=[
+  {id:'agenda',    label:'Agenda / Topics',  ph:'What was covered…'},
+  {id:'decisions', label:'Key Decisions',     ph:'Decisions reached…'},
+  {id:'actions',   label:'Action Items',      ph:'SS — follow up on X by date…'},
+  {id:'blockers',  label:'Blockers / Risks',  ph:'What is blocked…'},
+  {id:'notes',     label:'Additional Notes',  ph:'Other context…'}
+];
+
+function buildNotes(){
+  var h2=renderHelpTip('notes');
+  var notes=DB.notes();
+  var q=''; var qEl=document.getElementById('notes-q');
+  if(qEl) q=qEl.value.toLowerCase();
+  var wsF=window.noteWsFilter||'';
+  if(q) notes=notes.filter(function(n){ return n.title.toLowerCase().indexOf(q)>-1||(n.agenda||'').toLowerCase().indexOf(q)>-1||(n.actions||'').toLowerCase().indexOf(q)>-1; });
+  if(wsF) notes=notes.filter(function(n){ return n.workstream===wsF; });
+  notes=notes.slice().sort(function(a,b){ return b.date.localeCompare(a.date); });
+
+  var ws=DB.settings().workstreams;
+  var h=h2+'<div style="max-width:800px">';
+
+  // WS filter
+  h+='<div class="row wrap" style="margin-bottom:12px;gap:5px">';
+  h+='<button class="btn sm'+(wsF===''?' active-filter':'')+'" onclick="noteWsFilter(\'\')">All</button>';
+  ws.forEach(function(w){
+    var cnt=DB.notes().filter(function(n){ return n.workstream===w; }).length;
+    if(cnt) h+='<button class="btn sm'+(wsF===w?' active-filter':'')+'" onclick="noteWsFilter(\''+_esc(w)+'\')" style="border-left:3px solid '+wsColor(w)+'">'+_esc(w)+'</button>';
+  });
+  h+='</div>';
+
+  if(!notes.length){
+    h+='<div class="empty"><div class="empty-ico">◎</div><div style="font-size:13px">No notes yet.</div></div>';
+    h+='</div>'; return h;
+  }
+
+  notes.forEach(function(n){
+    h+='<div class="note-card" onclick="viewNote(\''+n.id+'\')">';
+    h+='<div class="row" style="align-items:flex-start">';
+    h+='<div style="flex:1"><div class="note-title">'+_esc(n.title)+'</div></div>';
+    h+='<div class="row" style="flex-shrink:0" onclick="event.stopPropagation()">';
+    h+='<button class="btn sm ghost" onclick="openNoteModal(\''+n.id+'\')">✏</button>';
+    h+='<button class="btn sm ghost" onclick="deleteNote(\''+n.id+'\')">✕</button>';
+    h+='</div></div>';
+    h+='<div class="note-meta"><span>'+_fmt(n.date)+'</span>';
+    if(n.workstream) h+='<span class="pill" style="background:'+wsColor(n.workstream)+'18;color:'+wsColor(n.workstream)+'">'+_esc(n.workstream)+'</span>';
+    if(n.attendees) h+='<span>👥 '+_esc(n.attendees)+'</span>';
+    h+='</div>';
+    if(n.agenda) h+='<div class="note-preview">'+_esc(n.agenda)+'</div>';
+    if(n.actions) h+='<div style="margin-top:5px;font-size:11.5px"><span style="color:var(--accent);font-weight:700">Actions: </span><span style="color:var(--t2)">'+_esc(n.actions.split('\n')[0].slice(0,80))+'</span></div>';
+    h+='</div>';
+  });
+  h+='</div>';
+  return h;
+}
+
+window.noteWsFilter='';
+function noteWsFilter(ws){ window.noteWsFilter=ws; renderContent(); }
+
+function viewNote(id){
+  var note=DB.notes().filter(function(n){ return n.id===id; })[0];
+  if(!note) return;
+  var body='<div class="note-meta" style="margin-bottom:14px"><span>'+_fmtFull(note.date)+'</span>';
+  if(note.workstream) body+='<span class="pill" style="background:'+wsColor(note.workstream)+'18;color:'+wsColor(note.workstream)+'">'+_esc(note.workstream)+'</span>';
+  if(note.attendees) body+='<span>👥 '+_esc(note.attendees)+'</span>';
+  body+='</div>';
+  NOTE_SEC.forEach(function(s){
+    if(note[s.id]) body+='<div style="margin-bottom:14px"><div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px">'+s.label+'</div><div style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap;background:var(--bg);border-radius:8px;padding:10px 12px">'+_esc(note[s.id])+'</div></div>';
+  });
+  // Push to todo button
+  if(note.actions){
+    body+='<div style="margin-top:10px"><button class="btn sm" onclick="pushActionsToTodo(\''+note.id+'\')">→ Push action items to To-Do</button></div>';
+  }
+  showModal({title:note.title,wide:true,body:body,saveLabel:'Edit',onSave:function(){ closeModal(); openNoteModal(id); }});
+}
+
+function pushActionsToTodo(noteId){
+  var note=DB.notes().filter(function(n){ return n.id===noteId; })[0];
+  if(!note||!note.actions) return;
+  var todos=DB.todos();
+  var lines=note.actions.split('\n').filter(function(l){ return l.trim(); });
+  lines.forEach(function(line){
+    todos.unshift({id:_uid(),text:line.trim(),date:_today(),workstream:note.workstream||'',
+      priority:'normal',done:false,createdAt:_now(),notes:'From: '+note.title});
+  });
+  DB.save('todos',todos);
+  closeModal();
+  alert(lines.length+' action item'+(lines.length>1?'s':'')+' added to To-Do.');
+  renderNav();
+}
+
+function deleteNote(id){
+  if(!confirm('Delete this note?')) return;
+  DB.save('notes',DB.notes().filter(function(n){ return n.id!==id; })); renderContent();
+}
+
+function openNoteModal(editId){
+  var notes=DB.notes();
+  var n=editId?notes.filter(function(x){ return x.id===editId; })[0]:null;
+  var ws=DB.settings().workstreams;
+  var wsOpts='<option value="">— none —</option>';
+  ws.forEach(function(w){ wsOpts+='<option value="'+_esc(w)+'"'+(n&&n.workstream===w?' selected':'')+'>'+_esc(w)+'</option>'; });
+  var cards=DB.cards();
+  var cardOpts='<option value="">— none —</option>';
+  cards.forEach(function(c){ cardOpts+='<option value="'+c.id+'"'+(n&&n.linkedCard===c.id?' selected':'')+'>'+_esc(c.title)+'</option>'; });
+  var fields='';
+  NOTE_SEC.forEach(function(s){ fields+='<div class="field"><label>'+s.label+'</label><textarea class="inp" id="m-n-'+s.id+'" rows="3" placeholder="'+_esc(s.ph)+'">'+_esc(n?n[s.id]||'':'')+'</textarea></div>'; });
+
+  showModal({title:n?'Edit Note':'New Meeting Note',wide:true,body:
+    '<div class="g2">'+
+      '<div class="field"><label>Title</label><input class="inp" type="text" id="m-n-title" placeholder="e.g. ZM/SS Weekly Sync" value="'+_esc(n?n.title:'')+'"/></div>'+
+      '<div class="field"><label>Date</label><input class="inp" type="date" id="m-n-date" value="'+(n?n.date:_today())+'"/></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Workstream</label><select class="inp" id="m-n-ws">'+wsOpts+'</select></div>'+
+      '<div class="field"><label>Attendees</label><input class="inp" type="text" id="m-n-att" placeholder="SS, ZM, CZ…" value="'+_esc(n?n.attendees||'':'')+'"/></div>'+
+    '</div>'+
+    '<div class="field"><label>Link to Card</label><select class="inp" id="m-n-card">'+cardOpts+'</select></div>'+
+    fields,
+  onSave:function(){
+    var title=document.getElementById('m-n-title').value.trim();
+    if(!title){ alert('Title required.'); return; }
+    var obj={id:editId||_uid(),title:title,date:document.getElementById('m-n-date').value||_today(),
+      workstream:document.getElementById('m-n-ws').value,attendees:document.getElementById('m-n-att').value.trim(),
+      linkedCard:document.getElementById('m-n-card').value,createdAt:n?n.createdAt:_now()};
+    NOTE_SEC.forEach(function(s){ obj[s.id]=document.getElementById('m-n-'+s.id).value.trim(); });
+    if(editId) DB.save('notes',notes.map(function(x){ return x.id===editId?obj:x; }));
+    else DB.save('notes',[obj].concat(notes));
+    closeModal(); renderContent();
+  }});
+}
+
+// ── ZENDESK ───────────────────────────────────────────────
+var ZD_STATS=[{id:'open',label:'Open',color:'var(--blue)'},{id:'pending',label:'Pending',color:'var(--yellow)'},{id:'waiting',label:'Waiting on me',color:'var(--accent)'},{id:'solved',label:'Solved',color:'var(--green)'},{id:'closed',label:'Closed',color:'var(--t3)'}];
+var ZD_PRIS=[{id:'urgent',label:'Urgent',color:'var(--red)'},{id:'high',label:'High',color:'var(--accent)'},{id:'normal',label:'Normal',color:'var(--blue)'},{id:'low',label:'Low',color:'var(--t3)'}];
+var ZD_TYPES=['Access request','Login issue','Data question','Bug / technical issue','General question','Escalation needed'];
+var ZD_ACCOUNTS=['School Performance','Insight'];
+var zdAccount='School Performance';
+var zdTab='tickets';
+var zdFilter='all';
+
+function getZStat(id){ for(var i=0;i<ZD_STATS.length;i++) if(ZD_STATS[i].id===id) return ZD_STATS[i]; return ZD_STATS[0]; }
+function getZPri(id){ for(var i=0;i<ZD_PRIS.length;i++) if(ZD_PRIS[i].id===id) return ZD_PRIS[i]; return ZD_PRIS[2]; }
+function zdDaysAgo(iso){ if(!iso) return null; return Math.floor((new Date()-new Date(iso))/86400000); }
+function zdEscAge(iso){ if(!iso) return ''; var d=zdDaysAgo(iso); return d===0?'today':d===1?'1 day ago':d+' days ago'; }
+
+function buildZendesk(){
+  var h2=renderHelpTip('zendesk');
+  var all=DB.tickets();
+  var q=''; var qEl=document.getElementById('zendesk-q');
+  if(qEl) q=qEl.value.toLowerCase();
+  var acctT=all.filter(function(t){ return (t.account||'School Performance')===zdAccount; });
+  var open=acctT.filter(function(t){ return t.status==='open'||t.status==='pending'||t.status==='waiting'; });
+  var solved=acctT.filter(function(t){ return t.status==='solved'||t.status==='closed'; });
+  var escalated=acctT.filter(function(t){ return t.escalated&&(t.status==='open'||t.status==='pending'||t.status==='waiting'); });
+  var myAction=acctT.filter(function(t){ return t.myAction&&(t.status==='open'||t.status==='waiting'); });
+  var waiting=acctT.filter(function(t){ return t.waitingOn&&(t.status==='open'||t.status==='pending'); });
+
+  var h=h2+'<div style="max-width:1060px">';
+
+  // Account tabs
+  h+='<div class="row" style="margin-bottom:16px;gap:0">';
+  ZD_ACCOUNTS.forEach(function(acc){
+    h+='<button onclick="zdSwitchAccount(\''+acc+'\')" style="padding:8px 20px;border:1px solid var(--border2);background:'+(zdAccount===acc?'var(--accent)':'var(--card)')+';color:'+(zdAccount===acc?'#fff':'var(--t2)')+';font-size:13px;font-weight:'+(zdAccount===acc?'600':'400')+';cursor:pointer;'+(acc==='School Performance'?'border-radius:8px 0 0 8px;border-right:none':'border-radius:0 8px 8px 0')+'"  >'+acc+'</button>';
+  });
+  h+='<div style="flex:1"></div>';
+  h+='<button onclick="zdSwitchTab(\'tickets\')" class="btn sm'+(zdTab==='tickets'?' primary':'')+'" style="margin-right:6px">All Tickets</button>';
+  h+='<button onclick="zdSwitchTab(\'escalations\')" class="btn sm'+(zdTab==='escalations'?' primary':'')+'">';
+  h+='Escalations';
+  if(escalated.length) h+=' <span style="background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:4px">'+escalated.length+'</span>';
+  h+='</button></div>';
+
+  // Stats
+  h+='<div class="row wrap" style="margin-bottom:16px;gap:10px">';
+  h+='<div class="stat" style="padding:10px 14px;flex:1;min-width:90px"><div class="stat-n" style="font-size:20px">'+open.length+'</div><div class="stat-l">Open</div></div>';
+  h+='<div class="stat" style="padding:10px 14px;flex:1;min-width:90px"><div class="stat-n" style="font-size:20px">'+solved.length+'</div><div class="stat-l">Solved</div></div>';
+  if(myAction.length) h+='<div class="stat" style="padding:10px 14px;flex:1;min-width:90px;border-color:var(--accent)"><div class="stat-n" style="font-size:20px;color:var(--accent)">'+myAction.length+'</div><div class="stat-l">Need my action</div></div>';
+  if(waiting.length) h+='<div class="stat" style="padding:10px 14px;flex:1;min-width:90px;border-color:var(--yellow)"><div class="stat-n" style="font-size:20px;color:var(--yellow)">'+waiting.length+'</div><div class="stat-l">Waiting on team</div></div>';
+  if(escalated.length) h+='<div class="stat" style="padding:10px 14px;flex:1;min-width:90px;border-color:var(--red)"><div class="stat-n" style="font-size:20px;color:var(--red)">'+escalated.length+'</div><div class="stat-l">Escalated</div></div>';
+  h+='</div>';
+
+  if(zdTab==='escalations') h+=buildEscalationView(escalated,q);
+  else h+=buildTicketTable(acctT,q);
+
+  h+='</div>';
+  return h;
+}
+
+function buildEscalationView(escalated,q){
+  if(q) escalated=escalated.filter(function(t){ return t.title.toLowerCase().indexOf(q)>-1||(t.ticketId||'').indexOf(q)>-1||(t.requester||'').toLowerCase().indexOf(q)>-1; });
+  if(!escalated.length) return '<div class="empty"><div class="empty-ico">✅</div><div style="font-size:13px">No open escalations.</div></div>';
+  escalated=escalated.slice().sort(function(a,b){ return (a.escalatedAt||'').localeCompare(b.escalatedAt||''); });
+  var h='<div style="margin-bottom:10px;font-size:12px;color:var(--t3)">Sorted oldest first — most overdue at top.</div>';
+  escalated.forEach(function(t){
+    var days=zdDaysAgo(t.escalatedAt);
+    var ac=days===null?'var(--t3)':days>14?'var(--red)':days>7?'var(--accent)':'var(--yellow)';
+    var st=getZStat(t.status); var pri=getZPri(t.priority);
+    h+='<div class="card" style="margin-bottom:10px;border-left:4px solid '+ac+';cursor:pointer" onclick="openTicketModal(\''+t.id+'\')">';
+    h+='<div class="card-body" style="padding:12px 16px">';
+    h+='<div class="row" style="margin-bottom:8px;align-items:flex-start">';
+    h+='<div style="flex:1"><div class="row wrap" style="margin-bottom:4px">';
+    if(t.ticketId) h+='<span class="mono" style="color:var(--blue)">#'+_esc(t.ticketId)+'</span>';
+    h+='<span class="pill" style="background:'+pri.color+'18;color:'+pri.color+'">'+pri.label+'</span>';
+    h+='<span class="pill" style="background:'+st.color+'18;color:'+st.color+'">'+st.label+'</span>';
+    if(zdAccount==='Insight'&&t.issueType) h+='<span class="pill gray">'+_esc(t.issueType)+'</span>';
+    h+='</div><div style="font-size:13px;font-weight:600">'+_esc(t.title)+'</div></div>';
+    h+='<div style="text-align:right;flex-shrink:0;padding-left:12px">';
+    if(days!==null){ h+='<div style="font-size:18px;font-weight:700;color:'+ac+';line-height:1">'+days+'</div><div style="font-size:9px;color:var(--t3);text-transform:uppercase">days</div>'; }
+    h+='</div></div>';
+    h+='<div class="row wrap" style="gap:14px;font-size:12px;color:var(--t2)">';
+    if(t.requester) h+='<span>👤 '+_esc(t.requester)+'</span>';
+    if(t.dbn) h+='<span>🏫 '+_esc(t.dbn)+'</span>';
+    if(t.escalatedTo) h+='<span>📤 '+_esc(t.escalatedTo)+'</span>';
+    if(t.escalatedAt) h+='<span style="color:'+ac+'">⏱ '+zdEscAge(t.escalatedAt)+'</span>';
+    h+='</div>';
+    if(t.myAction||t.waitingOn){
+      h+='<div class="g2" style="margin-top:10px;gap:8px">';
+      if(t.myAction) h+='<div style="background:#fdf3ee;border-radius:8px;padding:8px 10px"><div style="font-size:9.5px;font-weight:700;color:var(--accent);text-transform:uppercase;margin-bottom:3px">I need to</div><div style="font-size:12px">'+_esc(t.myAction)+'</div></div>';
+      if(t.waitingOn) h+='<div style="background:#fef8ec;border-radius:8px;padding:8px 10px"><div style="font-size:9.5px;font-weight:700;color:var(--yellow);text-transform:uppercase;margin-bottom:3px">Waiting on</div><div style="font-size:12px">'+_esc(t.waitingOn)+'</div></div>';
+      h+='</div>';
+    }
+    if(t.statusNotes) h+='<div style="margin-top:8px;font-size:11.5px;color:var(--t2);padding:6px 10px;background:var(--bg);border-radius:6px">'+_esc(t.statusNotes)+'</div>';
+    h+='</div></div>';
+  });
+  return h;
+}
+
+function buildTicketTable(tickets,q){
+  if(q) tickets=tickets.filter(function(t){ return t.title.toLowerCase().indexOf(q)>-1||(t.ticketId||'').indexOf(q)>-1||(t.requester||'').toLowerCase().indexOf(q)>-1||(t.dbn||'').indexOf(q)>-1; });
+  var h='<div class="row wrap" style="margin-bottom:12px;gap:6px">';
+  var filters=[{id:'all',label:'All'},{id:'open',label:'Open'},{id:'waiting',label:'Waiting on me'},{id:'escalated',label:'Escalated'},{id:'solved',label:'Solved'}];
+  filters.forEach(function(f){ h+='<button class="btn sm'+(zdFilter===f.id?' active-filter':'')+'" onclick="zdSetFilter(\''+f.id+'\')">'+f.label+'</button>'; });
+  h+='</div>';
+  if(zdFilter==='open') tickets=tickets.filter(function(t){ return t.status==='open'||t.status==='pending'; });
+  if(zdFilter==='waiting') tickets=tickets.filter(function(t){ return t.status==='waiting'||t.myAction; });
+  if(zdFilter==='escalated') tickets=tickets.filter(function(t){ return t.escalated; });
+  if(zdFilter==='solved') tickets=tickets.filter(function(t){ return t.status==='solved'||t.status==='closed'; });
+  tickets=tickets.slice().sort(function(a,b){
+    var as=(a.escalated&&a.status!=='solved'?2:0)+(a.myAction?1:0);
+    var bs=(b.escalated&&b.status!=='solved'?2:0)+(b.myAction?1:0);
+    return as!==bs?bs-as:(b.createdAt||'').localeCompare(a.createdAt||'');
+  });
+  if(!tickets.length) return h+'<div class="empty"><div class="empty-ico">🎫</div><div style="font-size:13px">No tickets here.</div></div>';
+  h+='<div class="tbl-wrap"><table class="tbl"><thead><tr>';
+  h+='<th>#</th><th style="min-width:180px">Issue</th>';
+  if(zdAccount==='Insight') h+='<th>Type</th>';
+  h+='<th>Requester</th><th>DBN</th><th>Status</th><th>I need to</th><th>Waiting on</th><th>Age</th><th></th>';
+  h+='</tr></thead><tbody>';
+  tickets.forEach(function(t){
+    var st=getZStat(t.status); var pri=getZPri(t.priority);
+    var isEsc=t.escalated&&(t.status==='open'||t.status==='pending'||t.status==='waiting');
+    var days=isEsc?zdDaysAgo(t.escalatedAt):zdDaysAgo(t.createdAt);
+    var ac=days===null?'':days>14?'overdue':days>7?'soon':'';
+    h+='<tr onclick="openTicketModal(\''+t.id+'\')" style="cursor:pointer'+(isEsc?';background:#fff8f6':'')+'">';
+    h+='<td><span class="mono" style="color:var(--blue)">'+(t.ticketId?'#'+_esc(t.ticketId):'—')+'</span></td>';
+    h+='<td><div style="font-weight:600;font-size:12.5px;display:flex;align-items:center;gap:4px">'+(isEsc?'<span style="color:var(--red)">⚑</span>':'')+_esc(t.title)+'</div>';
+    h+='<div style="margin-top:2px;display:flex;gap:4px"><span class="pill" style="font-size:9px;background:'+st.color+'18;color:'+st.color+'">'+st.label+'</span><span class="pill" style="font-size:9px;background:'+pri.color+'18;color:'+pri.color+'">'+pri.label+'</span></div></td>';
+    if(zdAccount==='Insight') h+='<td style="font-size:11.5px">'+_esc(t.issueType||'—')+'</td>';
+    h+='<td style="font-size:12px">'+_esc(t.requester||'—')+'</td>';
+    h+='<td><span class="mono" style="font-size:11px">'+_esc(t.dbn||'—')+'</span></td>';
+    h+='<td>'+(t.escalatedTo?'<div style="font-size:10px;color:var(--t3)">→ '+_esc(t.escalatedTo)+'</div>':'')+'</td>';
+    h+='<td style="font-size:11.5px;max-width:140px">'+(t.myAction?'<span style="color:var(--accent)">'+_esc(t.myAction)+'</span>':'<span style="color:var(--t3)">—</span>')+'</td>';
+    h+='<td style="font-size:11.5px;max-width:140px">'+(t.waitingOn?'<span style="color:var(--yellow)">'+_esc(t.waitingOn)+'</span>':'<span style="color:var(--t3)">—</span>')+'</td>';
+    h+='<td style="font-size:11px;white-space:nowrap" class="'+(isEsc?ac:'')+'">'+(days!==null?days+'d':'—')+'</td>';
+    h+='<td onclick="event.stopPropagation()" style="white-space:nowrap">';
+    h+='<button class="btn sm ghost" onclick="cycleTicketStatus(\''+t.id+'\')">↻</button>';
+    h+='<button class="btn sm ghost" onclick="deleteTicket(\''+t.id+'\')">✕</button>';
+    h+='</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+function zdSwitchAccount(acc){ zdAccount=acc; zdFilter='all'; zdTab='tickets'; renderContent(); }
+function zdSwitchTab(tab){ zdTab=tab; renderContent(); }
+function zdSetFilter(f){ zdFilter=f; renderContent(); }
+
+function cycleTicketStatus(id){
+  var tickets=DB.tickets();
+  var order=['open','pending','waiting','solved','closed'];
+  for(var i=0;i<tickets.length;i++) if(tickets[i].id===id){
+    var idx=order.indexOf(tickets[i].status);
+    tickets[i].status=order[(idx+1)%order.length]; tickets[i].updatedAt=_now(); break;
+  }
+  DB.save('tickets',tickets); renderNav(); renderContent();
+}
+function deleteTicket(id){
+  if(!confirm('Delete?')) return;
+  DB.save('tickets',DB.tickets().filter(function(t){ return t.id!==id; })); renderContent();
+}
+
+function openTicketModal(editId){
+  var tickets=DB.tickets();
+  var t=editId?tickets.filter(function(x){ return x.id===editId; })[0]:null;
+  var acct=t?(t.account||'School Performance'):zdAccount;
+  var statOpts=''; ZD_STATS.forEach(function(s){ statOpts+='<option value="'+s.id+'"'+((t?t.status:'open')===s.id?' selected':'')+'>'+s.label+'</option>'; });
+  var priOpts=''; ZD_PRIS.forEach(function(p){ priOpts+='<option value="'+p.id+'"'+((t?t.priority:'normal')===p.id?' selected':'')+'>'+p.label+'</option>'; });
+  var accOpts=''; ZD_ACCOUNTS.forEach(function(a){ accOpts+='<option value="'+a+'"'+(acct===a?' selected':'')+'>'+a+'</option>'; });
+  var typeOpts='<option value="">— select —</option>'; ZD_TYPES.forEach(function(tp){ typeOpts+='<option value="'+tp+'"'+(t&&t.issueType===tp?' selected':'')+'>'+tp+'</option>'; });
+  var notes=DB.notes(); var noteOpts='<option value="">— none —</option>';
+  notes.forEach(function(n){ noteOpts+='<option value="'+n.id+'"'+(t&&t.linkedNote===n.id?' selected':'')+'>'+_esc(n.title)+'</option>'; });
+  var insightF=acct==='Insight'?'<div class="field"><label>Issue Type</label><select class="inp" id="m-z-type">'+typeOpts+'</select></div>':'';
+
+  showModal({title:t?'Edit Ticket':'New Ticket — '+acct,wide:true,body:
+    '<div class="g2">'+
+      '<div class="field"><label>Ticket # (Zendesk ID)</label><input class="inp" type="text" id="m-z-id" placeholder="e.g. 1043" value="'+_esc(t?t.ticketId||'':'')+'"/></div>'+
+      '<div class="field"><label>Account</label><select class="inp" id="m-z-acct">'+accOpts+'</select></div>'+
+    '</div>'+
+    '<div class="field"><label>Issue / Title</label><input class="inp" type="text" id="m-z-title" placeholder="Brief description" value="'+_esc(t?t.title:'')+'"/></div>'+
+    insightF+
+    '<div class="g2">'+
+      '<div class="field"><label>Requester</label><input class="inp" type="text" id="m-z-req" placeholder="Name or school…" value="'+_esc(t?t.requester||'':'')+'"/></div>'+
+      '<div class="field"><label>DBN</label><input class="inp" type="text" id="m-z-dbn" placeholder="e.g. 01M292" value="'+_esc(t?t.dbn||'':'')+'"/></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Status</label><select class="inp" id="m-z-status">'+statOpts+'</select></div>'+
+      '<div class="field"><label>Priority</label><select class="inp" id="m-z-pri">'+priOpts+'</select></div>'+
+    '</div>'+
+    '<div class="field"><label>What I need to do</label><textarea class="inp" id="m-z-myaction" rows="2" placeholder="Reply, follow up, escalate…">'+_esc(t?t.myAction||'':'')+'</textarea></div>'+
+    '<div class="field"><label>Waiting on (internal team)</label><textarea class="inp" id="m-z-waiting" rows="2" placeholder="Waiting on RF, ZM…">'+_esc(t?t.waitingOn||'':'')+'</textarea></div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Escalated?</label><select class="inp" id="m-z-esc">'+
+        '<option value="">Not escalated</option>'+
+        '<option value="yes"'+(t&&t.escalated?' selected':'')+'>Yes — escalated</option>'+
+      '</select></div>'+
+      '<div class="field"><label>Escalated to</label><input class="inp" type="text" id="m-z-escto" placeholder="ZM, RF…" value="'+_esc(t?t.escalatedTo||'':'')+'"/></div>'+
+    '</div>'+
+    '<div class="field"><label>Escalation date</label><input class="inp" type="date" id="m-z-escdate" value="'+(t&&t.escalatedAt?t.escalatedAt.split('T')[0]:'')+'"/></div>'+
+    '<div class="field"><label>Link to Meeting Note</label><select class="inp" id="m-z-note">'+noteOpts+'</select></div>'+
+    '<div class="field"><label>Status Notes</label><textarea class="inp" id="m-z-notes" rows="3" placeholder="Current status, updates…">'+_esc(t?t.statusNotes||'':'')+'</textarea></div>',
+  onSave:function(){
+    var title=document.getElementById('m-z-title').value.trim();
+    if(!title){ alert('Title required.'); return; }
+    var escVal=document.getElementById('m-z-esc').value;
+    var escDate=document.getElementById('m-z-escdate').value;
+    var typeEl=document.getElementById('m-z-type');
+    var obj={id:editId||_uid(),account:document.getElementById('m-z-acct').value,title:title,
+      ticketId:document.getElementById('m-z-id').value.trim(),issueType:typeEl?typeEl.value:'',
+      requester:document.getElementById('m-z-req').value.trim(),dbn:document.getElementById('m-z-dbn').value.trim(),
+      status:document.getElementById('m-z-status').value,priority:document.getElementById('m-z-pri').value,
+      myAction:document.getElementById('m-z-myaction').value.trim(),waitingOn:document.getElementById('m-z-waiting').value.trim(),
+      escalated:escVal==='yes',escalatedTo:document.getElementById('m-z-escto').value.trim(),
+      escalatedAt:escVal==='yes'&&escDate?escDate+'T00:00:00.000Z':(t?t.escalatedAt:null),
+      linkedNote:document.getElementById('m-z-note').value,
+      statusNotes:document.getElementById('m-z-notes').value.trim(),
+      updatedAt:_now(),createdAt:t?t.createdAt:_now()};
+    if(editId) DB.save('tickets',tickets.map(function(x){ return x.id===editId?obj:x; }));
+    else DB.save('tickets',[obj].concat(tickets));
+    closeModal(); renderNav(); renderContent();
+  }});
+}
+
+// ── COMMS ─────────────────────────────────────────────────
+var COMMS_TYPES=['Digest','Mailing','Announcement','Recap','Other'];
+var COMMS_AUDIENCES=['SWM','OPE Leads','Principals','All staff','Leadership','External'];
+var COMMS_STATS=['drafting','in review','approved','sent'];
+var commsView='workstream';
+
+function buildComms(){
+  var h2=renderHelpTip('comms');
+  var all=DB.comms();
+  var q=''; var qEl=document.getElementById('comms-q');
+  if(qEl) q=qEl.value.toLowerCase();
+  var comms=q?all.filter(function(c){ return c.title.toLowerCase().indexOf(q)>-1||(c.workstream||'').toLowerCase().indexOf(q)>-1; }):all;
+
+  var h=h2+'<div style="max-width:1060px">';
+
+  // View toggle
+  h+='<div class="row wrap" style="margin-bottom:14px;gap:8px">';
+  h+='<button class="btn sm'+(commsView==='workstream'?' active-filter':'')+'" onclick="commsSetView(\'workstream\')">By Workstream</button>';
+  h+='<button class="btn sm'+(commsView==='status'?' active-filter':'')+'" onclick="commsSetView(\'status\')">By Status</button>';
+  h+='<button class="btn sm'+(commsView==='date'?' active-filter':'')+'" onclick="commsSetView(\'date\')">By Send Date</button>';
+  h+='</div>';
+
+  if(!comms.length){
+    h+='<div class="empty"><div class="empty-ico">✉</div><div style="font-size:13px">No comms tracked yet.</div></div>';
+    h+='</div>'; return h;
+  }
+
+  // Stats
+  var drafting=all.filter(function(c){ return c.status==='drafting'; }).length;
+  var review=all.filter(function(c){ return c.status==='in review'; }).length;
+  var sent=all.filter(function(c){ return c.status==='sent'; }).length;
+  h+='<div class="g4" style="margin-bottom:16px">';
+  h+='<div class="stat"><div class="stat-n">'+drafting+'</div><div class="stat-l">Drafting</div></div>';
+  h+='<div class="stat"><div class="stat-n">'+review+'</div><div class="stat-l">In Review</div></div>';
+  h+='<div class="stat"><div class="stat-n">'+sent+'</div><div class="stat-l">Sent</div></div>';
+  h+='<div class="stat"><div class="stat-n">'+all.length+'</div><div class="stat-l">Total</div></div>';
+  h+='</div>';
+
+  var sorted=comms.slice().sort(function(a,b){ return (a.sendDate||'9').localeCompare(b.sendDate||'9'); });
+
+  h+='<div class="tbl-wrap"><table class="tbl"><thead><tr>';
+  h+='<th>Title</th><th>Type</th><th>Workstream</th><th>Audience</th><th>Status</th><th>Planned Send</th><th>Actual Send</th><th>Reviewer</th><th>Link</th><th></th>';
+  h+='</tr></thead><tbody>';
+
+  sorted.forEach(function(c){
+    var statColor={'drafting':'var(--yellow)','in review':'var(--blue)','approved':'var(--purple)','sent':'var(--green)'}[c.status]||'var(--t3)';
+    var du=_daysUntil(c.sendDate);
+    var dc=du===null?'':du<0&&c.status!=='sent'?'overdue':du<=3&&c.status!=='sent'?'soon':'';
+    h+='<tr onclick="openCommsModal(\''+c.id+'\')" style="cursor:pointer">';
+    h+='<td><div style="font-weight:600;font-size:12.5px;display:flex;align-items:center;gap:6px">';
+    if(c.workstream) h+='<div style="width:4px;height:16px;border-radius:2px;background:'+wsColor(c.workstream)+'"></div>';
+    h+=_esc(c.title)+'</div>';
+    if(c.notes) h+='<div style="font-size:11px;color:var(--t3);margin-top:1px">'+_esc(c.notes.slice(0,60))+'</div>';
+    h+='</td>';
+    h+='<td><span class="pill gray">'+_esc(c.type||'—')+'</span></td>';
+    h+='<td style="font-size:12px">'+_esc(c.workstream||'—')+'</td>';
+    h+='<td style="font-size:12px">'+_esc(c.audience||'—')+'</td>';
+    h+='<td><span style="font-size:11px;font-weight:600;color:'+statColor+'">'+_esc(c.status||'—')+'</span></td>';
+    h+='<td style="font-size:11px" class="'+dc+'">'+_fmt(c.sendDate)+'</td>';
+    h+='<td style="font-size:11px;color:var(--t3)">'+_fmt(c.actualSendDate)+'</td>';
+    h+='<td style="font-size:12px">'+_esc(c.reviewer||'—')+'</td>';
+    h+='<td>'+(c.url?'<a href="'+_esc(c.url)+'" target="_blank" onclick="event.stopPropagation()" style="color:var(--blue);font-size:11px">Open ↗</a>':'')+'</td>';
+    h+='<td onclick="event.stopPropagation()" style="white-space:nowrap">';
+    if(c.status!=='sent') h+='<button class="btn sm" onclick="openPresendChecklist(\''+c.id+'\')" style="font-size:10px;margin-right:4px">✓ Pre-send</button>';
+    h+='<button class="btn sm ghost" onclick="deleteComms(\''+c.id+'\')">✕</button>';
+    h+='</td>';
+    h+='</tr>';
+  });
+
+  h+='</tbody></table></div></div>';
+  return h;
+}
+
+function commsSetView(v){ commsView=v; renderContent(); }
+function deleteComms(id){
+  if(!confirm('Delete?')) return;
+  DB.save('comms',DB.comms().filter(function(c){ return c.id!==id; })); renderContent();
+}
+
+function openCommsModal(editId){
+  var comms=DB.comms();
+  var c=editId?comms.filter(function(x){ return x.id===editId; })[0]:null;
+  var ws=DB.settings().workstreams;
+  var wsOpts='<option value="">— none —</option>';
+  ws.forEach(function(w){ wsOpts+='<option value="'+_esc(w)+'"'+(c&&c.workstream===w?' selected':'')+'>'+_esc(w)+'</option>'; });
+  var typeOpts=''; COMMS_TYPES.forEach(function(t){ typeOpts+='<option value="'+t+'"'+(c&&c.type===t?' selected':'')+'>'+t+'</option>'; });
+  var audOpts=''; COMMS_AUDIENCES.forEach(function(a){ audOpts+='<option value="'+a+'"'+(c&&c.audience===a?' selected':'')+'>'+a+'</option>'; });
+  var statOpts=''; COMMS_STATS.forEach(function(s){ statOpts+='<option value="'+s+'"'+((c?c.status:'drafting')===s?' selected':'')+'>'+s+'</option>'; });
+
+  showModal({title:c?'Edit Comms':'New Comms',wide:true,body:
+    '<div class="field"><label>Title / Subject</label><input class="inp" type="text" id="m-cm-title" placeholder="e.g. SQR Prelim Principals Mailing" value="'+_esc(c?c.title:'')+'"/></div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Type</label><select class="inp" id="m-cm-type">'+typeOpts+'</select></div>'+
+      '<div class="field"><label>Workstream</label><select class="inp" id="m-cm-ws">'+wsOpts+'</select></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Audience</label><select class="inp" id="m-cm-aud">'+audOpts+'</select></div>'+
+      '<div class="field"><label>Status</label><select class="inp" id="m-cm-status">'+statOpts+'</select></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Planned Send Date</label><input class="inp" type="date" id="m-cm-send" value="'+(c?c.sendDate||'':'')+'"/></div>'+
+      '<div class="field"><label>Actual Send Date</label><input class="inp" type="date" id="m-cm-actual" value="'+(c?c.actualSendDate||'':'')+'"/></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Who reviews / approves</label><input class="inp" type="text" id="m-cm-rev" placeholder="ZM, CZ…" value="'+_esc(c?c.reviewer||'':'')+'"/></div>'+
+      '<div class="field"><label>Draft Link / URL</label><input class="inp" type="text" id="m-cm-url" placeholder="https://…" value="'+_esc(c?c.url||'':'')+'"/></div>'+
+    '</div>'+
+    '<div class="field"><label>Notes</label><textarea class="inp" id="m-cm-notes" rows="2" placeholder="Context, instructions…">'+_esc(c?c.notes||'':'')+'</textarea></div>',
+  onSave:function(){
+    var title=document.getElementById('m-cm-title').value.trim();
+    if(!title){ alert('Title required.'); return; }
+    var obj={id:editId||_uid(),title:title,type:document.getElementById('m-cm-type').value,
+      workstream:document.getElementById('m-cm-ws').value,audience:document.getElementById('m-cm-aud').value,
+      status:document.getElementById('m-cm-status').value,sendDate:document.getElementById('m-cm-send').value,
+      actualSendDate:document.getElementById('m-cm-actual').value,reviewer:document.getElementById('m-cm-rev').value.trim(),
+      url:document.getElementById('m-cm-url').value.trim(),notes:document.getElementById('m-cm-notes').value.trim(),
+      createdAt:c?c.createdAt:_now()};
+    if(editId) DB.save('comms',comms.map(function(x){ return x.id===editId?obj:x; }));
+    else DB.save('comms',[obj].concat(comms));
+    closeModal(); renderContent();
+  }});
+}
+
+// ── DECISIONS ─────────────────────────────────────────────
+var DEC_FUNCTIONS=['Project Management','Management','Engagement','Communication','Operations'];
+
+function buildDecisions(){
+  var h2=renderHelpTip('decisions');
+  var all=DB.decisions();
+  var h=h2+'<div style="max-width:900px">';
+  if(!all.length){
+    h+='<div class="empty"><div class="empty-ico">⊕</div><div style="font-size:13px">No decisions logged yet.</div></div>';
+    h+='</div>'; return h;
+  }
+
+  var groups={};
+  all.forEach(function(d){
+    var k=d.function||'Other';
+    if(!groups[k]) groups[k]=[];
+    groups[k].push(d);
+  });
+
+  DEC_FUNCTIONS.concat(['Other']).forEach(function(fn){
+    if(!groups[fn]||!groups[fn].length) return;
+    h+='<div style="margin-bottom:20px">';
+    h+='<div class="section-label" style="margin-bottom:10px">'+fn+'</div>';
+    groups[fn].sort(function(a,b){ return b.date.localeCompare(a.date); }).forEach(function(d){
+      h+='<div class="card" style="margin-bottom:8px;cursor:pointer" onclick="openDecisionModal(\''+d.id+'\')">';
+      h+='<div class="card-body" style="padding:11px 16px">';
+      h+='<div class="row" style="align-items:flex-start;margin-bottom:6px">';
+      h+='<div style="flex:1"><div style="font-size:13.5px;font-weight:600;font-family:Lora,serif">'+_esc(d.title)+'</div></div>';
+      h+='<div class="row" style="flex-shrink:0;gap:6px">';
+      h+='<span style="font-size:11px;color:var(--t3)">'+_fmt(d.date)+'</span>';
+      if(d.workstream) h+='<span class="pill" style="background:'+wsColor(d.workstream)+'18;color:'+wsColor(d.workstream)+'">'+_esc(d.workstream)+'</span>';
+      h+='<button class="btn sm ghost" onclick="event.stopPropagation();deleteDecision(\''+d.id+'\')">✕</button>';
+      h+='</div></div>';
+      if(d.why) h+='<div style="font-size:12px;color:var(--t2);margin-bottom:5px">'+_esc(d.why)+'</div>';
+      h+='<div class="row wrap" style="gap:12px;font-size:11.5px;color:var(--t3)">';
+      if(d.madeBy) h+='<span>👤 '+_esc(d.madeBy)+'</span>';
+      if(d.impacts) h+='<span>⚡ Impacts: '+_esc(d.impacts)+'</span>';
+      if(d.inform) h+='<span>📢 Inform: '+_esc(d.inform)+'</span>';
+      h+='</div></div></div>';
+    });
+    h+='</div>';
+  });
+
+  h+='</div>';
+  return h;
+}
+
+function deleteDecision(id){
+  if(!confirm('Delete?')) return;
+  DB.save('decisions',DB.decisions().filter(function(d){ return d.id!==id; })); renderContent();
+}
+
+function openDecisionModal(editId){
+  var decisions=DB.decisions();
+  var d=editId?decisions.filter(function(x){ return x.id===editId; })[0]:null;
+  var ws=DB.settings().workstreams;
+  var wsOpts='<option value="">— none —</option>';
+  ws.forEach(function(w){ wsOpts+='<option value="'+_esc(w)+'"'+(d&&d.workstream===w?' selected':'')+'>'+_esc(w)+'</option>'; });
+  var fnOpts=''; DEC_FUNCTIONS.forEach(function(f){ fnOpts+='<option value="'+f+'"'+(d&&d.function===f?' selected':'')+'>'+f+'</option>'; });
+
+  showModal({title:d?'Edit Decision':'Log a Decision',wide:true,body:
+    '<div class="field"><label>Decision</label><input class="inp" type="text" id="m-dc-title" placeholder="What was decided?" value="'+_esc(d?d.title:'')+'"/></div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Date</label><input class="inp" type="date" id="m-dc-date" value="'+(d?d.date:_today())+'"/></div>'+
+      '<div class="field"><label>Made by</label><input class="inp" type="text" id="m-dc-by" placeholder="SS, ZM, Cleo…" value="'+_esc(d?d.madeBy||'':'')+'"/></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Workstream</label><select class="inp" id="m-dc-ws">'+wsOpts+'</select></div>'+
+      '<div class="field"><label>Function</label><select class="inp" id="m-dc-fn">'+fnOpts+'</select></div>'+
+    '</div>'+
+    '<div class="field"><label>Why — rationale</label><textarea class="inp" id="m-dc-why" rows="2" placeholder="Why was this decision made?">'+_esc(d?d.why||'':'')+'</textarea></div>'+
+    '<div class="field"><label>Alternatives considered</label><textarea class="inp" id="m-dc-alt" rows="2" placeholder="What else was considered?">'+_esc(d?d.alternatives||'':'')+'</textarea></div>'+
+    '<div class="field"><label>What it impacts / changes</label><input class="inp" type="text" id="m-dc-imp" placeholder="e.g. SQR comms timeline, Insight access flow…" value="'+_esc(d?d.impacts||'':'')+'"/></div>'+
+    '<div class="field"><label>Who needs to be informed</label><input class="inp" type="text" id="m-dc-inf" placeholder="OPE Leads, SWM, ZM…" value="'+_esc(d?d.inform||'':'')+'"/></div>',
+  onSave:function(){
+    var title=document.getElementById('m-dc-title').value.trim();
+    if(!title){ alert('Decision text required.'); return; }
+    var obj={id:editId||_uid(),title:title,date:document.getElementById('m-dc-date').value||_today(),
+      madeBy:document.getElementById('m-dc-by').value.trim(),workstream:document.getElementById('m-dc-ws').value,
+      function:document.getElementById('m-dc-fn').value,why:document.getElementById('m-dc-why').value.trim(),
+      alternatives:document.getElementById('m-dc-alt').value.trim(),impacts:document.getElementById('m-dc-imp').value.trim(),
+      inform:document.getElementById('m-dc-inf').value.trim(),createdAt:d?d.createdAt:_now()};
+    if(editId) DB.save('decisions',decisions.map(function(x){ return x.id===editId?obj:x; }));
+    else DB.save('decisions',[obj].concat(decisions));
+    closeModal(); renderContent();
+  }});
+}
+
+// ── STAKEHOLDERS ──────────────────────────────────────────
+var STAKEHOLDER_GROUPS=['Internal team','OPE Leads','School contacts / principals','Leadership / deputy EDs'];
+
+function buildStakeholders(){
+  var h2=renderHelpTip('stakeholders');
+  var all=DB.stakeholders();
+  var h=h2+'<div style="max-width:900px">';
+  if(!all.length){
+    h+='<div class="empty"><div class="empty-ico">◉</div><div style="font-size:13px">No stakeholders yet.</div></div>';
+    h+='</div>'; return h;
+  }
+
+  var groups={};
+  all.forEach(function(s){
+    var k=s.group||'Other';
+    if(!groups[k]) groups[k]=[];
+    groups[k].push(s);
+  });
+
+  STAKEHOLDER_GROUPS.concat(['Other']).forEach(function(grp){
+    if(!groups[grp]||!groups[grp].length) return;
+    h+='<div style="margin-bottom:20px">';
+    h+='<div class="section-label">'+grp+'</div>';
+    h+='<div class="tbl-wrap"><table class="tbl"><thead><tr>';
+    h+='<th>Name / Role</th><th>Workstreams</th><th>Notes</th><th></th>';
+    h+='</tr></thead><tbody>';
+    groups[grp].forEach(function(s){
+      h+='<tr onclick="openStakeholderModal(\''+s.id+'\')" style="cursor:pointer">';
+      h+='<td><div style="font-weight:600;font-size:12.5px">'+_esc(s.name)+'</div><div style="font-size:11px;color:var(--t3)">'+_esc(s.role||'')+'</div></td>';
+      h+='<td>';
+      if(s.workstreams){
+        s.workstreams.split(',').forEach(function(w){ w=w.trim(); if(w) h+='<span class="pill" style="margin:1px;background:'+wsColor(w)+'18;color:'+wsColor(w)+'">'+_esc(w)+'</span>'; });
+      }
+      h+='</td>';
+      h+='<td style="font-size:11.5px;color:var(--t2);max-width:220px">'+_esc((s.notes||'').slice(0,80))+'</td>';
+      h+='<td onclick="event.stopPropagation()"><button class="btn sm ghost" onclick="deleteStakeholder(\''+s.id+'\')">✕</button></td>';
+      h+='</tr>';
+    });
+    h+='</tbody></table></div></div>';
+  });
+
+  h+='</div>';
+  return h;
+}
+
+function deleteStakeholder(id){
+  if(!confirm('Delete?')) return;
+  DB.save('stakeholders',DB.stakeholders().filter(function(s){ return s.id!==id; })); renderContent();
+}
+
+function openStakeholderModal(editId){
+  var stakeholders=DB.stakeholders();
+  var s=editId?stakeholders.filter(function(x){ return x.id===editId; })[0]:null;
+  var grpOpts=''; STAKEHOLDER_GROUPS.forEach(function(g){ grpOpts+='<option value="'+g+'"'+(s&&s.group===g?' selected':'')+'>'+g+'</option>'; });
+
+  showModal({title:s?'Edit Stakeholder':'Add Stakeholder',body:
+    '<div class="g2">'+
+      '<div class="field"><label>Name</label><input class="inp" type="text" id="m-sk-name" placeholder="Full name or initials" value="'+_esc(s?s.name:'')+'"/></div>'+
+      '<div class="field"><label>Role / Title</label><input class="inp" type="text" id="m-sk-role" placeholder="e.g. Deputy ED, OPE Lead…" value="'+_esc(s?s.role||'':'')+'"/></div>'+
+    '</div>'+
+    '<div class="field"><label>Group</label><select class="inp" id="m-sk-grp">'+grpOpts+'</select></div>'+
+    '<div class="field"><label>Workstreams they\'re connected to</label><input class="inp" type="text" id="m-sk-ws" placeholder="e.g. SQR, Insight, NSS (comma separated)" value="'+_esc(s?s.workstreams||'':'')+'"/></div>'+
+    '<div class="field"><label>Notes / Context</label><textarea class="inp" id="m-sk-notes" rows="4" placeholder="What do I need to know about them? What do they need from me?">'+_esc(s?s.notes||'':'')+'</textarea></div>',
+  onSave:function(){
+    var name=document.getElementById('m-sk-name').value.trim();
+    if(!name){ alert('Name required.'); return; }
+    var obj={id:editId||_uid(),name:name,role:document.getElementById('m-sk-role').value.trim(),
+      group:document.getElementById('m-sk-grp').value,workstreams:document.getElementById('m-sk-ws').value.trim(),
+      notes:document.getElementById('m-sk-notes').value.trim(),createdAt:s?s.createdAt:_now()};
+    if(editId) DB.save('stakeholders',stakeholders.map(function(x){ return x.id===editId?obj:x; }));
+    else DB.save('stakeholders',[obj].concat(stakeholders));
+    closeModal(); renderContent();
+  }});
+}
+
+// ── END OF DAY ────────────────────────────────────────────
+function buildEod(){
+  var h2=renderHelpTip('eod');
+  var logs=DB.eod().slice().sort(function(a,b){ return b.date.localeCompare(a.date); });
+  var h=h2+'<div style="max-width:640px">';
+  h+='<div style="font-size:12.5px;color:var(--t3);margin-bottom:18px">Set your #1 priority for tomorrow. Carry-overs push to To-Do automatically.</div>';
+  if(!logs.length){
+    h+='<div class="empty"><div class="empty-ico">◑</div><div style="font-size:13px">No end of day logs yet.</div></div>';
+    h+='</div>'; return h;
+  }
+  logs.forEach(function(log){
+    h+='<div class="card" style="margin-bottom:12px">';
+    h+='<div class="card-head"><span style="font-family:Lora,serif;font-size:13px;font-weight:600">'+_fmtFull(log.date)+'</span>';
+    h+='<button class="btn sm ghost ml-auto" onclick="deleteEod(\''+log.id+'\')">✕</button></div>';
+    h+='<div class="card-body" style="padding:10px 16px">';
+    h+='<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:4px">Priority #1 for tomorrow</div>';
+    h+='<div style="font-size:13px;color:var(--text)">'+_esc(log.priority1||'—')+'</div>';
+    if(log.carryOvers) h+='<div style="margin-top:10px"><div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:3px">CARRY-OVERS</div><div style="font-size:12.5px;white-space:pre-wrap;color:var(--t2)">'+_esc(log.carryOvers)+'</div></div>';
+    h+='</div></div>';
+  });
+  h+='</div>';
+  return h;
+}
+
+function deleteEod(id){
+  if(!confirm('Delete this log?')) return;
+  DB.save('eod',DB.eod().filter(function(e){ return e.id!==id; })); renderContent();
+}
+
+function openEodModal(){
+  var td=_today();
+  var existing=DB.eod().filter(function(e){ return e.date===td; })[0];
+  var todos=DB.todos().filter(function(t){ return !t.done&&t.date<td; });
+
+  showModal({title:'End of Day — '+_fmt(td),body:
+    '<div class="field"><label>Priority #1 for tomorrow</label><textarea class="inp" id="m-eod-pri" rows="2" placeholder="The one thing I must do tomorrow…">'+_esc(existing?existing.priority1||'':'')+'</textarea></div>'+
+    '<div class="field"><label>Carry-overs (these will be added to To-Do for tomorrow)</label><textarea class="inp" id="m-eod-carry" rows="4" placeholder="One item per line…">'+_esc(existing?existing.carryOvers||'':todos.slice(0,5).map(function(t){ return t.text; }).join('\n'))+'</textarea></div>',
+  onSave:function(){
+    var pri=document.getElementById('m-eod-pri').value.trim();
+    var carry=document.getElementById('m-eod-carry').value.trim();
+    var obj={id:existing?existing.id:_uid(),date:td,priority1:pri,carryOvers:carry,createdAt:existing?existing.createdAt:_now()};
+    var logs=DB.eod();
+    if(existing) DB.save('eod',logs.map(function(x){ return x.id===existing.id?obj:x; }));
+    else DB.save('eod',[obj].concat(logs));
+    // Push carry-overs to tomorrow's todo
+    if(carry){
+      var tomorrow=new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+      var tomorrowStr=tomorrow.toISOString().split('T')[0];
+      var todos2=DB.todos();
+      carry.split('\n').filter(function(l){ return l.trim(); }).forEach(function(line){
+        todos2.unshift({id:_uid(),text:line.trim(),date:tomorrowStr,priority:'normal',done:false,createdAt:_now(),notes:'Carried over from EOD'});
+      });
+      DB.save('todos',todos2);
+    }
+    closeModal(); renderNav(); renderContent();
+  }});
+}
+
+// ── WEEKLY SNAPSHOT ───────────────────────────────────────
+var snapshotHtml='';
+
+function buildSnapshot(){
+  var h2=renderHelpTip('snapshot');
+  var h=h2+'<div style="max-width:700px">';
+  h+='<div style="font-size:12.5px;color:var(--t3);margin-bottom:18px">Auto-generated from this week\'s activity. Hit "Generate This Week" in the top right, then edit before saving.</div>';
+  if(!snapshotHtml){
+    h+='<div class="empty"><div class="empty-ico">◐</div><div style="font-size:13px">Hit <strong>Generate This Week</strong> to create your snapshot.</div></div>';
+  } else {
+    h+=snapshotHtml;
+  }
+  h+='</div>';
+  return h;
+}
+
+function generateSnapshot(){
+  var td=_today();
+  var weekStart=new Date(); weekStart.setDate(weekStart.getDate()-weekStart.getDay());
+  var ws=weekStart.toISOString().split('T')[0];
+
+  var todos=DB.todos();
+  var notes=DB.notes();
+  var deliverables=DB.deliverables();
+  var cards=DB.cards();
+  var tickets=DB.tickets();
+
+  var done=todos.filter(function(t){ return t.done&&(t.doneAt||'')>=ws; });
+  var sentDels=deliverables.filter(function(d){ return (d.phase==='sent'||d.phase==='done')&&d.dueDate>=ws; });
+  var thisWeekNotes=notes.filter(function(n){ return n.date>=ws; });
+  var carryOver=todos.filter(function(t){ return !t.done&&t.date<td; });
+  var blocked=cards.filter(function(c){ return c.status==='blocked'; });
+  var openTickets=tickets.filter(function(t){ return t.status==='open'; });
+
+  var h='<div class="eod-card">';
+  h+='<div style="font-family:Lora,serif;font-size:20px;font-weight:600;margin-bottom:4px">Weekly Snapshot</div>';
+  h+='<div style="font-size:12px;color:var(--t3);margin-bottom:20px">Week of '+_fmt(ws)+' — '+_fmt(td)+'</div>';
+
+  // Done
+  h+=snapshotSection('✓ Tasks completed ('+done.length+')', done.map(function(t){ return t.text+(t.workstream?' ('+t.workstream+')':''); }));
+  h+=snapshotSection('◫ Deliverables sent / submitted ('+sentDels.length+')', sentDels.map(function(d){ return d.title; }));
+  h+=snapshotSection('◎ Meetings this week ('+thisWeekNotes.length+')', thisWeekNotes.map(function(n){ return n.title+' — '+_fmt(n.date); }));
+
+  // Carrying over
+  h+=snapshotSection('→ Carrying over to next week ('+carryOver.length+')', carryOver.slice(0,8).map(function(t){ return t.text; }));
+
+  // Blockers
+  if(blocked.length) h+=snapshotSection('⛔ Blocked ('+blocked.length+')', blocked.map(function(c){ return c.title+(c.blockerNote?' — '+c.blockerNote:''); }));
+  if(openTickets.length) h+='<div style="margin-bottom:16px"><div style="font-size:10.5px;font-weight:700;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">🎫 Open Zendesk tickets</div><div style="font-size:13px;color:var(--t2)">'+openTickets.length+' open across School Performance &amp; Insight</div></div>';
+
+  // Next week
+  var upDel=deliverables.filter(function(d){ return d.phase!=='done'&&d.phase!=='sent'&&d.dueDate>td; }).sort(function(a,b){ return a.dueDate.localeCompare(b.dueDate); }).slice(0,5);
+  h+=snapshotSection('📅 Next week priorities', upDel.map(function(d){ return _fmt(d.dueDate)+' — '+d.title; }));
+
+  h+='</div>';
+  snapshotHtml=h;
+  renderContent();
+}
+
+function snapshotSection(title, items){
+  if(!items.length) return '';
+  var h='<div style="margin-bottom:16px">';
+  h+='<div style="font-size:10.5px;font-weight:700;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">'+title+'</div>';
+  h+='<ul style="padding-left:16px;margin:0">';
+  items.forEach(function(item){ h+='<li style="font-size:13px;color:var(--t2);line-height:1.7">'+_esc(item)+'</li>'; });
+  h+='</ul></div>';
+  return h;
+}
+
+// ── QUICK CAPTURE ─────────────────────────────────────────
+document.getElementById('qc-btn').addEventListener('click',function(){
+  showModal({title:'Quick Capture',body:
+    '<div class="field"><label>What\'s on your mind?</label><textarea class="inp" id="m-qc-text" rows="3" placeholder="Task, idea, follow-up…" autofocus></textarea></div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Date</label><input class="inp" type="date" id="m-qc-date" value="'+_today()+'"/></div>'+
+      '<div class="field"><label>Workstream (optional)</label><select class="inp" id="m-qc-ws"><option value="">— none —</option>'+
+        DB.settings().workstreams.map(function(w){ return '<option value="'+_esc(w)+'">'+_esc(w)+'</option>'; }).join('')+
+      '</select></div>'+
+    '</div>',
+  onSave:function(){
+    var text=document.getElementById('m-qc-text').value.trim();
+    if(!text){ alert('Write something first.'); return; }
+    var obj={id:_uid(),text:text,date:document.getElementById('m-qc-date').value||_today(),
+      workstream:document.getElementById('m-qc-ws').value,priority:'normal',done:false,createdAt:_now()};
+    DB.save('todos',[obj].concat(DB.todos()));
+    closeModal(); renderNav();
+    if(currentView==='todo') renderContent();
+  }});
+  setTimeout(function(){ var el=document.getElementById('m-qc-text'); if(el) el.focus(); },80);
+});
+
+// ── MODAL ENGINE ──────────────────────────────────────────
+function showModal(opts){
+  var root=document.getElementById('modal-root');
+  root.innerHTML='<div class="overlay" id="modal-overlay" onclick="overlayClick(event)">'+
+    '<div class="modal'+(opts.wide?' wide':'')+'">'+
+    '<div class="modal-head"><h2>'+_esc(opts.title)+'</h2><button class="btn sm ghost" onclick="closeModal()">✕</button></div>'+
+    '<div class="modal-body">'+opts.body+'</div>'+
+    '<div class="modal-foot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" id="modal-save">'+(opts.saveLabel||'Save')+'</button></div>'+
+    '</div></div>';
+  document.getElementById('modal-save').onclick=opts.onSave;
+  setTimeout(function(){ var f=root.querySelector('input,textarea,select'); if(f) f.focus(); },60);
+}
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+function overlayClick(e){ if(e.target.id==='modal-overlay') closeModal(); }
+
+// ── KEYBOARD ──────────────────────────────────────────────
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape') closeModal();
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){
+    e.preventDefault();
+    if(currentView==='todo')          openTodoModal('');
+    else if(currentView==='notes')        openNoteModal('');
+    else if(currentView==='cards')        openCardModal('');
+    else if(currentView==='calendar')     openEventModal('','');
+    else if(currentView==='zendesk')      openTicketModal('');
+    else if(currentView==='deliverables') openDelivModal('');
+    else if(currentView==='releases')     openReleaseModal('');
+    else if(currentView==='comms')        openCommsModal('');
+    else if(currentView==='decisions')    openDecisionModal('');
+    else if(currentView==='stakeholders') openStakeholderModal('');
+    else if(currentView==='learning')     openLearningModal('');
+    else document.getElementById('qc-btn').click();
+  }
+});
+
+// ── SIDEBAR TOGGLE ────────────────────────────────────────
+document.getElementById('sb-toggle').addEventListener('click',function(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
+
+// ── JIRA LINK HELPER ──────────────────────────────────────
+var JIRA_BASE = _lsGet('dh4-jira-base','');
+
+function jiraLink(ticket){
+  if(!ticket) return '';
+  var base = JIRA_BASE || 'https://jira.atlassian.net/browse/';
+  return '<a href="'+_esc(base+ticket)+'" target="_blank" onclick="event.stopPropagation()" class="mono" style="color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue)">'+_esc(ticket)+' ↗</a>';
+}
+
+function setJiraBase(){
+  var base = prompt('Paste your Jira base URL (e.g. https://yourcompany.atlassian.net/browse/):', JIRA_BASE||'');
+  if(base !== null){ JIRA_BASE = base; _lsSave('dh4-jira-base', base); alert('Saved! All Jira ticket numbers are now clickable links.'); }
+}
+
+// ── PRE-SEND CHECKLIST ────────────────────────────────────
+var PRESEND_CHECKS = [
+  {id:'plain', label:'Plain language?', desc:'A principal or OPE Lead with no context can understand this.'},
+  {id:'action', label:'Action-oriented?', desc:'The reader knows exactly what they need to do or know.'},
+  {id:'proofread', label:'Proofread?', desc:'Grammar and spelling checked. Read it out loud once.'},
+  {id:'reviewed', label:'Reviewed by supervisor / PM?', desc:'ZM or the project lead has signed off.'},
+  {id:'format', label:'Formatting consistent?', desc:'Headers, bullets, and tone match our templates.'}
+];
+
+function openPresendChecklist(commsId){
+  var checks = PRESEND_CHECKS;
+  var body = '<div style="font-size:12.5px;color:var(--t2);margin-bottom:16px">Go through each item before marking this as sent. Be honest — if you rush, it shows.</div>';
+  body += '<div style="display:flex;flex-direction:column;gap:10px">';
+  checks.forEach(function(c){
+    body += '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--bg);border-radius:9px;border:1px solid var(--border)">';
+    body += '<input type="checkbox" id="psc-'+c.id+'" style="margin-top:2px;width:16px;height:16px;flex-shrink:0;accent-color:var(--green)">';
+    body += '<div><div style="font-size:13px;font-weight:600">'+_esc(c.label)+'</div>';
+    body += '<div style="font-size:11.5px;color:var(--t3);margin-top:1px">'+_esc(c.desc)+'</div></div>';
+    body += '</div>';
+  });
+  body += '</div>';
+  body += '<div style="margin-top:14px;padding:10px 12px;background:#fdf3ee;border-radius:8px;font-size:12px;color:var(--accent)">⚡ Tip: If you drafted this today, close it and come back tomorrow before sending.</div>';
+
+  showModal({title:'Pre-Send Checklist',body:body,saveLabel:'All checked — mark as sent',onSave:function(){
+    var allChecked = checks.every(function(c){ return document.getElementById('psc-'+c.id).checked; });
+    if(!allChecked){ alert('Check all items before marking as sent. Take the time — it matters.'); return; }
+    if(commsId){
+      var comms = DB.comms();
+      for(var i=0;i<comms.length;i++) if(comms[i].id===commsId){
+        comms[i].status='sent'; comms[i].actualSendDate=_today(); break;
+      }
+      DB.save('comms',comms);
+    }
+    closeModal(); renderContent();
+  }});
+}
+
+// ── LEARNING LOG ──────────────────────────────────────────
+var LEARNING_TOPICS = ['SQR','NSS','SPS','ISA','State Accountability','CCR','PPR','Insight','ESSA','OSP Operations','Other'];
+
+function buildLearning(){
+  var h2 = renderHelpTip('learning');
+  var all = DB.learning ? DB.learning() : _lsGet('dh4-learning',[]);
+  var h = h2 + '<div style="max-width:800px">';
+
+  if(!all.length){
+    h += '<div class="empty"><div class="empty-ico">⟡</div><div style="font-size:13px">No entries yet.<br/>Hit <strong>+ Log Learning</strong> whenever you read something, attend a training, or understand something new.</div></div>';
+    h += '</div>'; return h;
+  }
+
+  // Group by topic
+  var groups = {};
+  all.forEach(function(e){
+    var k = e.topic||'Other';
+    if(!groups[k]) groups[k]=[];
+    groups[k].push(e);
+  });
+
+  Object.keys(groups).sort().forEach(function(topic){
+    h += '<div style="margin-bottom:22px">';
+    h += '<div class="section-label" style="display:flex;align-items:center;gap:7px">';
+    h += '<div style="width:8px;height:8px;border-radius:50%;background:'+wsColor(topic)+'"></div>';
+    h += _esc(topic)+' <span style="font-weight:400;color:var(--t3)">('+groups[topic].length+')</span></div>';
+    groups[topic].sort(function(a,b){ return b.date.localeCompare(a.date); }).forEach(function(e){
+      h += '<div class="card" style="margin-bottom:8px;cursor:pointer" onclick="openLearningModal(\''+e.id+'\')">';
+      h += '<div class="card-body" style="padding:10px 16px">';
+      h += '<div class="row" style="margin-bottom:6px">';
+      h += '<div style="flex:1;font-size:13px;font-weight:600;font-family:Lora,serif">'+_esc(e.title)+'</div>';
+      h += '<span style="font-size:11px;color:var(--t3);flex-shrink:0">'+_fmt(e.date)+'</span>';
+      h += '<button class="btn sm ghost" onclick="event.stopPropagation();deleteLearning(\''+e.id+'\')">✕</button>';
+      h += '</div>';
+      if(e.takeaway){
+        h += '<div style="font-size:12.5px;color:var(--t2);margin-bottom:6px;padding:7px 10px;background:var(--bg);border-radius:7px">';
+        h += '<span style="font-size:9.5px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em">Key takeaway: </span>';
+        h += _esc(e.takeaway)+'</div>';
+      }
+      if(e.unclear){
+        h += '<div style="font-size:12px;color:var(--t3);padding:5px 10px;background:#fef8ec;border-radius:7px">';
+        h += '<span style="font-size:9.5px;font-weight:700;color:var(--yellow);text-transform:uppercase;letter-spacing:.05em">Still unclear: </span>';
+        h += _esc(e.unclear)+'</div>';
+      }
+      h += '</div></div>';
+    });
+    h += '</div>';
+  });
+
+  h += '</div>';
+  return h;
+}
+
+function deleteLearning(id){
+  if(!confirm('Delete this entry?')) return;
+  _lsSave('dh4-learning', _lsGet('dh4-learning',[]).filter(function(e){ return e.id!==id; }));
+  renderContent();
+}
+
+function openLearningModal(editId){
+  var all = _lsGet('dh4-learning',[]);
+  var e = editId ? all.filter(function(x){ return x.id===editId; })[0] : null;
+  var topicOpts = ''; LEARNING_TOPICS.forEach(function(t){ topicOpts += '<option value="'+t+'"'+(e&&e.topic===t?' selected':'')+'>'+t+'</option>'; });
+
+  showModal({title:e?'Edit Entry':'Log a Learning',wide:true,body:
+    '<div class="field"><label>What did you learn about / read / attend?</label><input class="inp" type="text" id="m-lr-title" placeholder="e.g. Read SQR Educator Guide, Attended Insight leads meeting…" value="'+_esc(e?e.title:'')+'"/></div>'+
+    '<div class="g2">'+
+      '<div class="field"><label>Topic / Workstream</label><select class="inp" id="m-lr-topic">'+topicOpts+'</select></div>'+
+      '<div class="field"><label>Date</label><input class="inp" type="date" id="m-lr-date" value="'+(e?e.date:_today())+'"/></div>'+
+    '</div>'+
+    '<div class="field"><label>Key takeaway — in your own words</label><textarea class="inp" id="m-lr-take" rows="3" placeholder="What do you now understand that you didn\'t before? Write it like you\'d explain it to someone else.">'+_esc(e?e.takeaway||'':'')+'</textarea></div>'+
+    '<div class="field"><label>What is still unclear?</label><textarea class="inp" id="m-lr-unc" rows="2" placeholder="What questions do you still have? What would you need to learn next?">'+_esc(e?e.unclear||'':'')+'</textarea></div>',
+  onSave:function(){
+    var title = document.getElementById('m-lr-title').value.trim();
+    if(!title){ alert('What did you learn about?'); return; }
+    var obj = {id:editId||_uid(),title:title,topic:document.getElementById('m-lr-topic').value,
+      date:document.getElementById('m-lr-date').value||_today(),
+      takeaway:document.getElementById('m-lr-take').value.trim(),
+      unclear:document.getElementById('m-lr-unc').value.trim(),createdAt:e?e.createdAt:_now()};
+    if(editId) _lsSave('dh4-learning', all.map(function(x){ return x.id===editId?obj:x; }));
+    else _lsSave('dh4-learning', [obj].concat(all));
+    closeModal(); renderContent();
+  }});
+}
+
+// ── WORKLOAD VIEW ─────────────────────────────────────────
+function buildWorkload(){
+  var h2 = renderHelpTip('workload');
+  var todos = DB.todos().filter(function(t){ return !t.done; });
+  var cards = DB.cards().filter(function(c){ return c.status!=='done'; });
+  var deliverables = DB.deliverables().filter(function(d){ return d.phase!=='done'&&d.phase!=='sent'; });
+  var comms = DB.comms().filter(function(c){ return c.status!=='sent'; });
+
+  // Build week buckets
+  var today = new Date(new Date().toDateString());
+  var weeks = [];
+  for(var w=0;w<6;w++){
+    var wStart = new Date(today); wStart.setDate(today.getDate() - today.getDay() + (w*7));
+    var wEnd = new Date(wStart); wEnd.setDate(wStart.getDate()+6);
+    weeks.push({start:wStart,end:wEnd,items:[]});
+  }
+  var overdue = [];
+  var nodate = [];
+
+  function bucket(dateStr, item){
+    if(!dateStr){ nodate.push(item); return; }
+    var d = new Date(dateStr+'T00:00:00');
+    if(d < today){ overdue.push(item); return; }
+    for(var i=0;i<weeks.length;i++){
+      if(d >= weeks[i].start && d <= weeks[i].end){ weeks[i].items.push(item); return; }
+    }
+    nodate.push(item);
+  }
+
+  todos.forEach(function(t){ bucket(t.date,{label:t.text,type:'task',ws:t.workstream||'',date:t.date,pri:t.priority||'normal'}); });
+  deliverables.forEach(function(d){ bucket(d.dueDate,{label:d.title,type:'deliverable',ws:d.workstream||'',date:d.dueDate,pri:d.priority||'normal'}); });
+  comms.forEach(function(c){ bucket(c.sendDate,{label:c.title,type:'comms',ws:c.workstream||'',date:c.sendDate,pri:'normal'}); });
+
+  var typeIcon = {task:'✓',deliverable:'◫',comms:'✉',card:'▦'};
+  var typeColor = {task:'var(--blue)',deliverable:'var(--accent)',comms:'var(--purple)',card:'var(--green)'};
+
+  function renderWeekItems(items){
+    if(!items.length) return '<div style="font-size:11.5px;color:var(--t3);padding:8px 0">Nothing due</div>';
+    var h='';
+    items.sort(function(a,b){ return (a.date||'9').localeCompare(b.date||'9'); }).forEach(function(item){
+      h += '<div style="display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:1px solid var(--border)">';
+      h += '<span style="font-size:10px;padding:2px 5px;border-radius:4px;background:'+typeColor[item.type]+'18;color:'+typeColor[item.type]+';flex-shrink:0;margin-top:1px">'+typeIcon[item.type]+' '+item.type+'</span>';
+      h += '<div style="flex:1"><div style="font-size:12px;font-weight:500">'+_esc(item.label)+'</div>';
+      if(item.ws) h += '<div style="font-size:10.5px;color:'+wsColor(item.ws)+'">'+_esc(item.ws)+'</div>';
+      h += '</div>';
+      if(item.date) h += '<span style="font-size:10.5px;color:var(--t3);flex-shrink:0">'+_fmt(item.date)+'</span>';
+      h += '</div>';
+    });
+    return h;
+  }
+
+  var h = h2 + '<div style="max-width:1060px">';
+
+  // Summary stats
+  var totalOpen = todos.length + deliverables.length + comms.length;
+  h += '<div class="g4" style="margin-bottom:20px">';
+  h += '<div class="stat"><div class="stat-n">'+totalOpen+'</div><div class="stat-l">Total open items</div></div>';
+  h += '<div class="stat" style="'+(overdue.length?'border-color:var(--red)':'')+'"><div class="stat-n" style="'+(overdue.length?'color:var(--red)':'')+'">'+overdue.length+'</div><div class="stat-l">Overdue</div></div>';
+  h += '<div class="stat"><div class="stat-n">'+weeks[0].items.length+'</div><div class="stat-l">Due this week</div></div>';
+  h += '<div class="stat"><div class="stat-n">'+cards.length+'</div><div class="stat-l">Active cards</div></div>';
+  h += '</div>';
+
+  // Overdue
+  if(overdue.length){
+    h += '<div class="card" style="margin-bottom:14px;border-color:var(--red)">';
+    h += '<div class="card-head" style="background:#fdf0ee"><span style="color:var(--red)">⚠</span><span class="card-title" style="color:var(--red)">Overdue ('+overdue.length+')</span></div>';
+    h += '<div class="card-body" style="padding:8px 16px">'+renderWeekItems(overdue)+'</div></div>';
+  }
+
+  // Weekly columns
+  h += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px">';
+  weeks.slice(0,6).forEach(function(wk,i){
+    var label = i===0?'This Week':i===1?'Next Week':'Week of '+_fmt(wk.start.toISOString().split('T')[0]);
+    var heavy = wk.items.length >= 5;
+    h += '<div class="card" style="'+(heavy?'border-color:var(--yellow)':'')+'">';
+    h += '<div class="card-head">';
+    h += '<span class="card-title" style="font-size:12px">'+label+'</span>';
+    h += '<span class="pill '+(wk.items.length===0?'gray':heavy?'yellow':'green')+'" style="margin-left:auto">'+wk.items.length+'</span>';
+    if(heavy) h += '<span style="font-size:10px;color:var(--yellow);margin-left:4px">heavy</span>';
+    h += '</div>';
+    h += '<div class="card-body" style="padding:6px 14px;max-height:220px;overflow-y:auto">'+renderWeekItems(wk.items)+'</div>';
+    h += '</div>';
+  });
+  h += '</div>';
+
+  // No date
+  if(nodate.length){
+    h += '<div class="card">';
+    h += '<div class="card-head"><span class="card-title" style="color:var(--t3)">No date set ('+nodate.length+')</span></div>';
+    h += '<div class="card-body" style="padding:6px 14px">'+renderWeekItems(nodate)+'</div></div>';
+  }
+
+  h += '</div>';
+  return h;
+}
+
+// ── ALERTS / NUDGES (Dashboard panel) ─────────────────────
+function buildAlerts(){
+  var alerts = [];
+  var td = _today();
+
+  // Overdue tasks
+  var odTodos = DB.todos().filter(function(t){ return !t.done&&t.date&&t.date<td; });
+  if(odTodos.length) alerts.push({level:'red',icon:'✓',msg:odTodos.length+' overdue task'+(odTodos.length>1?'s':'')+'. Oldest: '+_esc(odTodos[0].text.slice(0,50))});
+
+  // Stuck cards
+  var stuckCards = DB.cards().filter(function(c){ var d=_daysAgo(c.statusChangedAt); return d!==null&&d>7&&c.status!=='done'; });
+  if(stuckCards.length) alerts.push({level:'yellow',icon:'▦',msg:stuckCards.length+' card'+(stuckCards.length>1?'s':'')+' stuck for 7+ days. Oldest stuck: '+_esc(stuckCards[0].title.slice(0,50))});
+
+  // Old escalations
+  var oldEsc = DB.tickets().filter(function(t){ return t.escalated&&(t.status==='open'||t.status==='pending')&&zdDaysAgo(t.escalatedAt)>14; });
+  if(oldEsc.length) alerts.push({level:'red',icon:'🎫',msg:oldEsc.length+' escalation'+(oldEsc.length>1?'s':'')+' over 14 days old. Oldest: '+_esc(oldEsc[0].title.slice(0,50))});
+
+  // Deliverables due in 3 days
+  var urgDel = DB.deliverables().filter(function(d){ var du=_daysUntil(d.dueDate); return du!==null&&du>=0&&du<=3&&d.phase!=='done'&&d.phase!=='sent'; });
+  if(urgDel.length) alerts.push({level:'yellow',icon:'◫',msg:urgDel.length+' deliverable'+(urgDel.length>1?'s':'')+' due within 3 days'});
+
+  // Comms overdue to send
+  var odComms = DB.comms().filter(function(c){ return c.sendDate&&c.sendDate<td&&c.status!=='sent'; });
+  if(odComms.length) alerts.push({level:'red',icon:'✉',msg:odComms.length+' comms piece'+(odComms.length>1?'s':'')+' past planned send date'});
+
+  if(!alerts.length) return '';
+
+  var h = '<div class="card" style="margin-bottom:16px;border-color:var(--yellow)">';
+  h += '<div class="card-head" style="background:linear-gradient(135deg,#fef8ec,#fdf3ee)"><span>⚡</span><span class="card-title">Nudges ('+alerts.length+')</span><span style="font-size:11px;color:var(--t3);margin-left:auto">Things that need attention</span></div>';
+  h += '<div class="card-body" style="padding:6px 16px">';
+  alerts.forEach(function(a){
+    var bg = a.level==='red'?'#fdf0ee':'#fef8ec';
+    var color = a.level==='red'?'var(--red)':'var(--yellow)';
+    h += '<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border)">';
+    h += '<span style="font-size:14px">'+a.icon+'</span>';
+    h += '<div style="flex:1;font-size:12.5px;color:var(--text)">'+a.msg+'</div>';
+    h += '<div style="width:8px;height:8px;border-radius:50%;background:'+color+';flex-shrink:0"></div>';
+    h += '</div>';
+  });
+  h += '</div></div>';
+  return h;
+}
+
+// Patch dashboard to include alerts and Jira settings link
+
+var HELP_TIPS = {
+  dashboard: {
+    icon: '◈',
+    title: 'Your morning home base',
+    tips: [
+      '<strong>Start here every day.</strong> It shows everything due today, upcoming meetings, and what\'s blocked — without you having to dig.',
+      '<strong>Today\'s Meetings</strong> pulls from your Calendar. When you add an event, fill in the Workstream field and it will show related tasks and last meeting\'s action items right here.',
+      '<strong>Blocked cards</strong> appear at the bottom in red. If something is blocked, update the card with why so it shows context here.',
+      '<strong>Deliverables Due Soon</strong> shows anything in your Deliverables tracker not yet marked sent or done.',
+      '<strong>Tip:</strong> Keep this tab open in the morning. Everything else flows from here.'
+    ]
+  },
+  inbox: {
+    icon: '⊠',
+    title: 'Everything that needs you — in one list',
+    tips: [
+      '<strong>This is your consolidated to-do from everywhere.</strong> It pulls action items from meeting notes, card action fields, Zendesk tickets where you marked "I need to do" something, and deliverables not yet started.',
+      '<strong>Sorted by due date</strong> so the most urgent things float up automatically.',
+      '<strong>Click "View →"</strong> on any item to jump straight to where it lives.',
+      '<strong>Check it mid-day</strong> when you\'re not sure what to work on next — it\'s the most honest view of what\'s actually outstanding.',
+      '<strong>Tip:</strong> If the inbox feels overwhelming, go deal with the source — close the Zendesk ticket, update the card, check off the task — and it disappears here automatically.'
+    ]
+  },
+  deliverables: {
+    icon: '◫',
+    title: 'Track every deadline across all projects',
+    tips: [
+      '<strong>This is the answer to "what\'s due when."</strong> Add every deliverable — drafts, mailings, submissions, reviews — across all workstreams here.',
+      '<strong>Type</strong> tells you what kind of deliverable it is: Draft, Review, Send, Submit, or Follow-up.',
+      '<strong>Phase</strong> moves it through: Not Started → In Progress → In Review → Sent → Done.',
+      '<strong>Start date + due date</strong> together help you plan backwards — if something is due Friday, when do you need to actually start?',
+      '<strong>Reviewer field:</strong> Fill this in so you know who needs to approve it before it goes out.',
+      '<strong>Tip:</strong> At the start of each release cycle (SQR, ISA, etc.), add all the deliverables for that cycle at once. Then you have a full picture of what the sprint looks like.'
+    ]
+  },
+  releases: {
+    icon: '⬡',
+    title: 'Track where each release stands in the pipeline',
+    tips: [
+      '<strong>One row per release</strong> (e.g. SQR Prelim 2025, ISA January 2026). Each release moves through 6 phases: Embargoed → Internal Review → Comms Drafting → Comms Sent → Public Release → Post-Release.',
+      '<strong>Pipeline view</strong> at the top shows all releases grouped by phase — so you can see at a glance what is embargoed vs. what is already public.',
+      '<strong>Gantt timeline</strong> shows releases plotted against time. Add a start date and release date for this to appear.',
+      '<strong>Embargo date</strong> is separate from release date — use it to track when materials can first be shared internally.',
+      '<strong>Tip:</strong> At the start of the school year, add all the releases you know are coming with their approximate dates. Update phases as they move.'
+    ]
+  },
+  calendar: {
+    icon: '⊡',
+    title: 'Everything that has a date, in one view',
+    tips: [
+      '<strong>This calendar is not just for meetings.</strong> Tasks with due dates, card deadlines, and deliverables all appear here automatically — color-coded by workstream.',
+      '<strong>Toggle between Month and Week view</strong> using the button in the top right. Week view is better for daily planning; Month view is better for seeing the full shape of a sprint.',
+      '<strong>Click any day</strong> to add a new event. Fill in Workstream to get color-coding and have it show on your Dashboard.',
+      '<strong>Prep Notes field</strong> on events is key — add what you need to prepare before the meeting and it surfaces on your dashboard the day of.',
+      '<strong>Tip:</strong> Color = workstream. If a week is all one color, you might be over-indexed on one project.'
+    ]
+  },
+  todo: {
+    icon: '✓',
+    title: 'Your daily task list',
+    tips: [
+      '<strong>Add tasks as they come up</strong> — from meetings, Zendesk tickets, your own planning. Use Quick Capture (the + button) if you\'re in another section.',
+      '<strong>Toggle grouping</strong> between by Date (see what\'s overdue vs. today vs. future) and by Workstream (see all SQR tasks together, all Insight tasks, etc.).',
+      '<strong>Waiting on flag:</strong> If a task is blocked on someone else, fill in the "Waiting on" field. It shows on the task so you know not to chase yourself.',
+      '<strong>Link to Card:</strong> If a task belongs to a project, link it to a Card. It will then show on that card and in the Action Inbox.',
+      '<strong>Recurring tasks:</strong> Use for things like weekly digest updates, check-ins, or standing reminders.',
+      '<strong>Tip:</strong> At the end of each day, use End of Day to set your #1 priority for tomorrow. That becomes your first task the next morning.'
+    ]
+  },
+  cards: {
+    icon: '▦',
+    title: 'Track projects and workstreams at a high level',
+    tips: [
+      '<strong>Cards are for projects, not individual tasks.</strong> Each card represents a body of work — SQR Comms, Insight Engagement, ISA Digest, etc.',
+      '<strong>Toggle between List view and Kanban view</strong> using the ⊞ View button. Kanban shows cards in columns by status.',
+      '<strong>Stuck flag:</strong> If a card has been in the same status for more than 7 days, it gets a yellow ⚠ warning. This is the app\'s way of flagging what\'s getting stale — the thing Cleo flagged in your review.',
+      '<strong>Action Items field:</strong> Write next steps here. They feed into your Action Inbox automatically.',
+      '<strong>Link to Note:</strong> Connect a card to its most recent meeting note so you can jump between them.',
+      '<strong>Tip:</strong> Status cycling (↻ button) lets you move a card through Pending → In Progress → Blocked → Done without opening it.'
+    ]
+  },
+  notes: {
+    icon: '◎',
+    title: 'Log every meeting so nothing gets lost',
+    tips: [
+      '<strong>Log notes right after a meeting</strong> while it\'s fresh. Even a few bullet points in the Action Items field is enough.',
+      '<strong>Filter by workstream</strong> using the colored buttons at the top to see all SQR notes, all Insight notes, etc.',
+      '<strong>Action Items field is the most important.</strong> Anything you write there will show up in your Action Inbox and can be pushed to To-Do with one click.',
+      '<strong>Attendees field:</strong> Note who was in the meeting. Your Dashboard uses this to show last meeting\'s actions when a recurring meeting comes up.',
+      '<strong>Link to Card:</strong> Connect a note to a card so you can see all meetings related to a project in one place.',
+      '<strong>Tip:</strong> After every meeting, spend 5 minutes filling in Key Decisions and Action Items. That\'s the most valuable habit you can build in the hub.'
+    ]
+  },
+  zendesk: {
+    icon: '🎫',
+    title: 'Track tickets across School Performance and Insight',
+    tips: [
+      '<strong>Two separate queues</strong> — toggle between School Performance and Insight at the top. Each has its own ticket list.',
+      '<strong>Escalation tab</strong> is your most important view. It shows only open escalated tickets, sorted oldest first — so the most overdue ones are always at the top. Red = 14+ days. Yellow = 7+ days.',
+      '<strong>Age column</strong> in the main table shows how long each ticket has been open, not just escalations.',
+      '<strong>"I need to" vs "Waiting on":</strong> Be specific in both fields. "I need to" means it\'s on you. "Waiting on" means you\'re blocked on someone else — name them so you know who to follow up with.',
+      '<strong>Insight issue types:</strong> Categorize every Insight ticket so you can spot patterns (e.g. lots of Access Requests = something is broken in the onboarding flow).',
+      '<strong>Tip:</strong> Check the Escalations tab first thing in the morning. If anything is over 14 days, that\'s your first priority.'
+    ]
+  },
+  comms: {
+    icon: '✉',
+    title: 'Track every mailing, digest, and announcement',
+    tips: [
+      '<strong>Add every piece of comms here</strong> — not just big mailings but also digests, OPE Lead announcements, SWM submissions. If it\'s going out, it lives here.',
+      '<strong>Status flow:</strong> Drafting → In Review → Approved → Sent. Move it as it progresses.',
+      '<strong>Planned vs Actual send date:</strong> Planned is when you intended to send it. Actual is when you did. Over time this shows you how accurate your estimates are.',
+      '<strong>Reviewer field:</strong> Who needs to sign off before it goes out? Add ZM, CZ, or whoever approves that piece.',
+      '<strong>URL / Link field:</strong> Paste the SharePoint or Google Doc link here so you can jump straight to the draft.',
+      '<strong>Tip:</strong> Toggle between By Workstream (to see all SQR comms together) and By Status (to see everything in review at once).'
+    ]
+  },
+  decisions: {
+    icon: '⊕',
+    title: 'Log decisions so you can find them later',
+    tips: [
+      '<strong>A decision log answers "wait, why did we decide that?"</strong> Log it right after the meeting while context is fresh.',
+      '<strong>Grouped by function:</strong> Project Management decisions stay separate from Communications decisions, etc.',
+      '<strong>Why / rationale is the most important field.</strong> The decision itself is obvious — why you made it is what you\'ll forget.',
+      '<strong>Who needs to be informed:</strong> If OPE Leads or SWM need to know about a decision, note it here so it doesn\'t get lost.',
+      '<strong>Tip:</strong> If a decision came out of a meeting, log it in the meeting note AND here. The note has context; this log lets you search across all decisions quickly.'
+    ]
+  },
+  stakeholders: {
+    icon: '◉',
+    title: 'Keep track of who you work with and what you need from them',
+    tips: [
+      '<strong>Four groups:</strong> Internal team (ZM, CZ, RF etc.), OPE Leads, School contacts, and Leadership.',
+      '<strong>Workstreams field:</strong> List which projects they\'re connected to, comma-separated (e.g. "SQR, Insight"). This helps you filter later.',
+      '<strong>Notes field is open-ended</strong> — use it for anything: their working style, what they\'re responsible for, what you\'re waiting on from them, or just context about the relationship.',
+      '<strong>Tip:</strong> Add your core contacts first — ZM, CZ, RF, and the OPE Leads you work with most. You don\'t need to add everyone, just the people whose context you\'d otherwise have to remember.'
+    ]
+  },
+  eod: {
+    icon: '◑',
+    title: 'Close out the day with intention',
+    tips: [
+      '<strong>One question: what is your #1 priority for tomorrow?</strong> Not three things, not a list — just one. The most important thing.',
+      '<strong>Carry-overs</strong> auto-populate with your overdue tasks as a starting point. Edit them, then hit Save — they get added to tomorrow\'s To-Do automatically.',
+      '<strong>Do this before you close your laptop.</strong> It takes 2 minutes and means tomorrow morning you open the hub and immediately know what to do first.',
+      '<strong>Tip:</strong> If you can\'t name your #1 priority, that\'s a signal to look at your Deliverables and Calendar and figure out what actually matters most tomorrow.'
+    ]
+  },
+  snapshot: {
+    icon: '◐',
+    title: 'A generated summary of your week',
+    tips: [
+      '<strong>Hit "Generate This Week"</strong> in the top right. It pulls from your completed tasks, sent deliverables, meeting notes, and upcoming items.',
+      '<strong>It\'s a starting point, not a final draft.</strong> The auto-generated version gives you the raw material — you edit it to reflect what actually mattered.',
+      '<strong>Use it for your own reflection</strong> on Friday afternoon before you log off. What did I actually do this week? What\'s carrying over?',
+      '<strong>Tip:</strong> The more you use the hub during the week — logging notes, checking off tasks, updating deliverable phases — the more accurate and useful the snapshot becomes.'
+    ]
+  },
+  learning: {
+    icon: '⟡',
+    title: 'Track what you\'re learning over time',
+    tips: [
+      '<strong>Log it right after you learn something</strong> — after reading a policy doc, attending a training, or finally understanding how a metric works.',
+      '<strong>Key takeaway in your own words</strong> is the most important field. If you can\'t explain it simply, you don\'t fully understand it yet.',
+      '<strong>"Still unclear" field</strong> is your next learning prompt — come back to it and update it when you figure it out.',
+      '<strong>Grouped by topic</strong> (SQR, Insight, State Accountability etc.) so you can see your depth in each area grow over time.',
+      '<strong>Tip:</strong> This directly addresses the goal you set in your review — deepening content knowledge. Even one entry a week adds up.'
+    ]
+  },
+  workload: {
+    icon: '◧',
+    title: 'See your full load before you commit to more',
+    tips: [
+      '<strong>This is the view to check before saying yes to something new.</strong> It shows every open task, deliverable, and comms piece by week.',
+      '<strong>A week marked "heavy" (5+ items)</strong> means you\'re at capacity. Use this to push back on new asks or negotiate deadlines proactively.',
+      '<strong>Overdue section</strong> at the top is your accountability mirror — everything here was supposed to be done already.',
+      '<strong>"No date set" section</strong> shows things floating with no deadline. These are the things that get forgotten. Set a date.',
+      '<strong>Tip:</strong> Check this on Monday morning and Friday afternoon. Monday to plan; Friday to assess what actually happened.'
+    ]
+  }
+};
+
+var helpExpanded = {};
+
+function renderHelpTip(viewId) {
+  var tip = HELP_TIPS[viewId];
+  if(!tip) return '';
+  var isOpen = helpExpanded[viewId] || false;
+  var h = '<div class="help-tip">';
+  h += '<div class="help-tip-head" onclick="toggleHelp(\''+viewId+'\')">';
+  h += '<span class="help-tip-icon">'+tip.icon+'</span>';
+  h += '<span class="help-tip-title">How to use: '+tip.title+'</span>';
+  h += '<span class="help-tip-toggle'+(isOpen?' open':'')+'">▾</span>';
+  h += '</div>';
+  h += '<div class="help-tip-body'+(isOpen?' visible':'')+'" id="help-body-'+viewId+'">';
+  h += '<ul>';
+  tip.tips.forEach(function(t){
+    h += '<li>'+t+'</li>';
+  });
+  h += '</ul>';
+  h += '</div>';
+  h += '</div>';
+  return h;
+}
+
+function toggleHelp(viewId){
+  helpExpanded[viewId] = !helpExpanded[viewId];
+  var body = document.getElementById('help-body-'+viewId);
+  var toggle = body ? body.previousElementSibling.querySelector('.help-tip-toggle') : null;
+  if(body){
+    body.classList.toggle('visible', helpExpanded[viewId]);
+    if(toggle) toggle.classList.toggle('open', helpExpanded[viewId]);
+  }
+}
+
+// ── BOOT ──────────────────────────────────────────────────
+renderNav();
+renderTopbar();
+renderContent();
+</script>
+</body>
+</html>
