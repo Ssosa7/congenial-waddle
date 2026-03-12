@@ -1,6 +1,6 @@
 {
   "v": 2,
-  "saved": "2026-03-12T13:28:33.441Z",
+  "saved": "2026-03-12T13:31:09.007Z",
   "data": {
     "todos": null,
     "notes": null,
@@ -6108,6 +6108,6 @@
     "focus-ws": null,
     "recurring-events": null,
     "nudge-last": "◑ End of day approaching — log how today went?2026-03-06",
-    "theme": "lavender"
+    "theme": "sage"
   }
 }
