@@ -1,6 +1,6 @@
 {
   "v": 2,
-  "saved": "2026-03-10T14:48:08.539Z",
+  "saved": "2026-03-12T13:28:33.441Z",
   "data": {
     "todos": null,
     "notes": null,
@@ -6091,8 +6091,23 @@
     "snoozes": null,
     "custom-ws": null,
     "jira-base": null,
+    "jira-bases": [
+      {
+        "name": "SQR",
+        "url": "https://doeord.atlassian.net/browse/"
+      },
+      {
+        "name": "SQRT",
+        "url": "https://doeord.atlassian.net/browse/"
+      },
+      {
+        "name": "INSIGHT",
+        "url": "https://doeord.atlassian.net/browse/"
+      }
+    ],
     "focus-ws": null,
     "recurring-events": null,
-    "nudge-last": "◑ End of day approaching — log how today went?2026-03-06"
+    "nudge-last": "◑ End of day approaching — log how today went?2026-03-06",
+    "theme": "lavender"
   }
 }
